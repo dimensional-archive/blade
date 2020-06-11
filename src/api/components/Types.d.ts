@@ -6,6 +6,12 @@ export interface ComponentOptions {
   category?: string;
 }
 
+export interface ContextData {
+  trigger?: string;
+  prefix?: string;
+  invoker?: string;
+}
+
 /** Command */
 
 export type ArgumentDefault = (ctx: CommandContext) => any | Promise<any>;
@@ -91,6 +97,14 @@ export interface CommandOptions extends ComponentOptions {
    * Permissions needed by the client.
    */
   permissions?: Permission | Permission[];
+  /**
+   * Per-Command inhibitors to use.
+   */
+  inhibitors?: string | string[];
+  /**
+   * Whether this command is editable or not.
+   */
+  editable?: boolean;
 }
 
 

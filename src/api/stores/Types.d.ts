@@ -9,3 +9,7 @@ export interface ComponentStoreOptions {
   autoCategory?: boolean;
   defaults?: ComponentOptions;
 }
+
+export interface CommandStoreOptions extends ComponentStoreOptions {
+  storeMessages?: boolean;
+}

@@ -1,6 +1,8 @@
 import { sep } from "path";
-import { ComponentStore } from "../stores/Base";
-import { BladeClient } from "../Client";
+
+import type { ComponentStore } from "../stores/Base";
+import type { BladeClient } from "../Client";
+import type { ComponentOptions } from "./Types";
 
 /**
  * The base class for all components like Command and Listener.
@@ -31,7 +33,17 @@ export abstract class Component {
     category: "General"
   }
 
-  static set defaults(defaults: ComponentOptions) {
+  public static set defaults(defaults: ComponentOptions) {
     this._defaults = defaults;
+  }
+
+  public static Setup(options: ComponentOptions = {}) {
+    return function <T extends new (...args: any[]) => Component>(t: T): T {
+      return class extends t {
+        constructor(...args: any[]) {
+          super(...args, options);
+        }
+      }
+    }
   }
 }

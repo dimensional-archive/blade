@@ -1,7 +1,9 @@
 import { LiteEmitter } from "../../utils/LiteEmitter";
-import { ComponentStoreOptions, LoadFilter } from "./Types";
+import { IllegalStateError, ParseError } from "@ayanaware/errors";
 import { Component } from "../components/Base";
-import { BladeClient } from "../Client";
+
+import type { ComponentStoreOptions, LoadFilter } from "./Types";
+import type { BladeClient } from "../Client";
 
 export abstract class ComponentStore<T extends Component> extends LiteEmitter {
   private static _defaults: ComponentStoreOptions = {
@@ -10,7 +12,6 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
     autoCategory: false,
     loadFilter: () => true
   }
-
 
   public readonly client: BladeClient;
   public readonly modules: Map<string, T> = new Map();
@@ -34,5 +35,22 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
     this.loadFilter = options.loadFilter ?? (() => false);
 
     if (options.defaults) options.classToHandle!.defaults = options.defaults;
+  }
+
+  public async load(file: string) {
+    try {
+      const { default: mod } = await import(file);
+      if (!mod) return;
+      if (!(mod.prototype instanceof Component)) throw new IllegalStateError("")
+
+        const comp: Component = new mod(this);
+
+    } catch (e) {
+      this.emit("error", new ParseError(`Couldn't parse file ${file}`).setCause(e));
+    }
+  }
+
+  public loadAll() {
+
   }
 }
