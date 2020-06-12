@@ -17,6 +17,16 @@ export class LiteEmitter {
   private readonly _handlers: Map<string, Set<LiteEmitterHandler>> = new Map();
 
   /**
+   * The amount of handlers for a given event.
+   * @param event The event to get.
+   * @since 1.0.0
+   */
+  public handlerCount(event: string): number {
+    if (!this._handlers.has(event)) return 0;
+    return this._handlers.get(event)!.size;
+  }
+
+  /**
    * Add a handler function for a given event.
    * @param event The name of the event.
    * @param fn The handler function.
@@ -59,6 +69,40 @@ export class LiteEmitter {
 
     return this;
   }
+
+  /**
+   * Add a handler function for a given event.
+   * @param event The name of the event.
+   * @param callback
+   */
+  public once(event: string, callback: LiteEmitterHandler): this {
+    const once = (...args: any[]) => {
+      try {
+        callback(...args);
+      } catch (e) {
+        if (event === "error") throw new LiteEmitterError(`Caught Error in "error" handler function`).setCause(e);
+        this.emit('error', new LiteEmitterError(`Caught Error in handler function`).setCause(e));
+      } finally {
+        this.removeListener(event, once);
+      }
+    }
+
+    this.addListener(event, once);
+
+    return this;
+  }
+
+  /**
+   * Add a handler function for a given event.
+   * @param event The name of the event.
+   * @param callback
+   */
+  public off(event: string, callback: LiteEmitterHandler): this {
+    this.addListener(event, callback);
+
+    return this;
+  }
+
 
   /**
    * Emit a new event to handlers.

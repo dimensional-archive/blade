@@ -5,6 +5,11 @@
   "repository": "git@github.com:LolWastedJS/Kyu.git",
   "author": "LolWastedJS <ml2dofficial@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "watch": "rimraf dist && tsc && tsc -w",
+    "test": "yarn build && node test/index.js"
+  },
   "dependencies": {
     "@ayanaware/errors": "^1.1.0",
     "eris": "^0.13.1"

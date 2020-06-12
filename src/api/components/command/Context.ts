@@ -1,12 +1,17 @@
 import { Command } from "./Command";
+import { ReplyBuilder } from "./ReplyBuilder";
 
 import type { Guild, Member, Message, MessageContent, MessageFile, User, VoiceState } from "eris";
 import type { BladeClient } from "../../Client";
-import type { ContextData } from "../Types";
 import type { CommandStore } from "../../stores/Command";
-import { ReplyBuilder } from "./ReplyBuilder";
 
 export type Content = MessageContent | ((builder: ReplyBuilder, ctx: Context) => ReplyBuilder | Promise<ReplyBuilder>)
+
+export interface ContextData {
+  trigger?: string;
+  prefix?: string;
+  invoker?: string;
+}
 
 export class Context {
   public readonly store: CommandStore;
