@@ -1,4 +1,4 @@
-import { Component } from "./Base";
+import { Component, ComponentOptions } from "./Base";
 import { MethodNotImplementedError } from "@ayanaware/errors";
 
 import type { MonitorStore } from "../stores/Monitor";
@@ -10,6 +10,15 @@ export class Monitor extends Component {
    * @since 1.0.0
    */
   public readonly store!: MonitorStore;
+
+  /**
+   * A typescript helper decorator.
+   * @param options The options to use when creating this listener.
+   * @constructor
+   */
+  public static Setup(options: ComponentOptions): <T extends new (...args: any[]) => Component>(t: T) => T {
+    return Component.Setup(options);
+  }
 
   /**
    * Runs this monitor

@@ -1,7 +1,7 @@
-import { Command } from "./Command";
 import { ReplyBuilder } from "./ReplyBuilder";
 
 import type { Guild, Member, Message, MessageContent, MessageFile, User, VoiceState } from "eris";
+import type { Command } from "./Command";
 import type { BladeClient } from "../../Client";
 import type { CommandStore } from "../../stores/Command";
 
@@ -46,7 +46,7 @@ export class Context {
 
     this.shouldEdit = false;
 
-    if (store.storeMessages) this.messages = new Map();
+    if (store.handling.storeMessages) this.messages = new Map();
   }
 
   /**
@@ -114,7 +114,7 @@ export class Context {
    * @param message Message(s) to add.
    */
   public addMessage(message: Message | Message[]): Message | Message[] {
-    if (this.store.storeMessages) {
+    if (this.store.handling.storeMessages) {
       if (Array.isArray(message)) {
         for (const msg of message) {
           this.messages!.set(msg.id, msg);

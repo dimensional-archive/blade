@@ -4,8 +4,7 @@ import { Context } from "./Context";
 import { MethodNotImplementedError } from "@ayanaware/errors";
 
 import type { CommandStore } from "../../stores/Command";
-import type { Permission } from "eris";
-import type { MessageContent } from "eris";
+import type { MessageContent, Permission } from "eris";
 
 export type CooldownType = "user" | "channel" | "guild";
 export type ArgumentDefault = (ctx: Context) => any | Promise<any>;
@@ -67,6 +66,10 @@ export interface CommandDescription {
 }
 
 export interface CommandOptions extends ComponentOptions {
+  /**
+   * Command aliases to use.
+   */
+  aliases?: string[];
   /**
    * Description of the command.
    */
@@ -239,7 +242,7 @@ export class Command extends Component {
    * @param args The parsed arguments.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async exec(ctx: Context, args?: []): Promise<any> {
+  public async run(ctx: Context, args?: []): Promise<any> {
     throw new MethodNotImplementedError();
   }
 }

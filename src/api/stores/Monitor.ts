@@ -1,8 +1,8 @@
 import { Monitor } from "../components/Monitor";
 import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "./Base";
+import { LiteEmitter } from "../..";
 
 import type { BladeClient } from "../Client";
-import { LiteEmitter } from "../..";
 
 /**
  * A monitor store that handles loading of monitors.
@@ -47,7 +47,6 @@ export class MonitorStore extends ComponentStore<Monitor> {
    * @since 1.0.0
    */
   public add(component: Monitor): Monitor | null {
-    console.log("hi")
     const monitor = super.add(component);
     if (!monitor) return null;
     this.emitter.on("message", component._ran.bind(component));

@@ -85,6 +85,16 @@ export class Listener extends Component {
     this.mode = options.mode ?? "on";
   }
 
+  /**
+   * A typescript helper decorator.
+   * @param options The options to use when creating this listener.
+   * @constructor
+   */
+  public static Setup(options: ListenerOptions): <T extends new (...args: any[]) => Component>(t: T) => T {
+    return Component.Setup(options);
+  }
+
+
   public run(): any {
     throw new MethodNotImplementedError();
   }

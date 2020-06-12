@@ -9,10 +9,27 @@ export interface BladeClientOptions extends ClientOptions {
 }
 
 export class BladeClient extends Client {
+  /**
+   * The base directory of the bot.
+   * @since 1.0.0
+   */
   public directory: string;
+  /**
+   * Whether the client has been started or not.
+   * @since 1.0.0
+   */
   public started: boolean;
+  /**
+   * A set of stores that are being used by the client.
+   * @since 1.0.0
+   */
   private readonly _stores: Set<ComponentStore<Component>> = new Set();
 
+  /**
+   * Creates a new BladeClient.
+   * @param token Your bot token.
+   * @param options
+   */
   public constructor(token: string, options: BladeClientOptions = {}) {
     super(token, options);
 

@@ -1,6 +1,7 @@
 import { Emitter, Listener } from "../components/Listener";
-import { BladeClient } from "../Client";
 import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "./Base";
+
+import type { BladeClient } from "../Client";
 
 export interface ListenerStoreOptions extends ComponentStoreOptions {
   emitters?: Record<string, Emitter>;
