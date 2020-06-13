@@ -117,7 +117,7 @@ export class Context {
       return this.lastResponse!.edit(transformed[0]);
     }
 
-    const sent = await this.message.channel.createMessage(transformed[0], transformed[1]);
+    const sent = await this.message.channel.createMessage(transformed);
     const lastSent = this.setLastResponse(sent);
     this.setEditable(!lastSent.attachments.length);
 
