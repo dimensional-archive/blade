@@ -1,10 +1,11 @@
 import { ParseError } from "@ayanaware/errors";
 import { join, relative, sep } from "path";
-
 import { LiteEmitter } from "../../utils/LiteEmitter";
 import { Util } from "../../utils/Util";
 import { Component, ComponentOptions } from "../components/Base";
-import { BladeClient } from "../Client";
+import { Storage } from "../../utils/Storage";
+
+import type { BladeClient } from "../Client";
 
 export type LoadFilter = (file: string) => boolean | Promise<boolean>;
 export type ComponentResolvable<T> = string | T;
@@ -41,7 +42,7 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
    * All of the loaded components.
    * @since 1.0.0
    */
-  public readonly components: Map<string, T> = new Map();
+  public readonly components: Storage<string, T> = new Storage();
 
   /**
    * The name of this store.

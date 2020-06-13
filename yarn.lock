@@ -28,6 +28,16 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
+"@klasa/event-iterator@^0.0.10":
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/@klasa/event-iterator/-/event-iterator-0.0.10.tgz#9805297be51ccb5767d31f700957ddb79ec4855b"
+  integrity sha512-AUr8d9+4YeHN2/b1C8EVSZTfLut/+j2u8zcrKRt3BFP5kxdHSg+RSOJ7wP+gQ0dvrVZMQNwbIg/xFVr9G1EsLA==
+
+"@klasa/timer-manager@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@klasa/timer-manager/-/timer-manager-0.0.1.tgz#977903d92453e9602c1803af15f1713d5ca028b9"
+  integrity sha512-1ElnhLXzqv4Iod/GS7+joZX71rhSxHBVDoTX8gnXF55BKXihv/p5tF3ddfx7Rn0kzUSQwJwJkyMO6QyaXMcB6A==
+
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
@@ -272,6 +282,11 @@ doctrine@^3.0.0:
   integrity sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==
   dependencies:
     esutils "^2.0.2"
+
+dotenv@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-8.2.0.tgz#97e619259ada750eea3e4ea3e26bceea5424b16a"
+  integrity sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
 
 emoji-regex@^7.0.1:
   version "7.0.3"

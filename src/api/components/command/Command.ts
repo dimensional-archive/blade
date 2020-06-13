@@ -1,50 +1,20 @@
 import { Component, ComponentOptions } from "../Base";
-import { Util } from "../../../utils/Util";
+import { Argument, CommandStore, IgnoreCooldown, IgnorePermissions, PrefixProvider, Util } from "../../..";
 import { Context } from "./Context";
 import { MethodNotImplementedError } from "@ayanaware/errors";
+import type { Permission } from "eris";
+import { Message } from "eris";
+import type { ArgumentOptions, DefaultArgumentOptions } from "./argument/Types";
+import { ArgumentGenerator, ArgumentRunner } from "./argument/ArgumentRunner";
+import { ContentParser } from "./argument/ContentParser";
 
-import type { CommandStore } from "../../stores/Command";
-import type { MessageContent, Permission } from "eris";
-
-export type CooldownType = "user" | "channel" | "guild";
-export type ArgumentDefault = (ctx: Context) => any | Promise<any>;
-export type PromptMessage = (ctx: Context) => MessageContent | Promise<MessageContent>;
-export type Restrictions = "developer" | "admin" | "moderator" | "dj";
+export type CooldownType = "author" | "channel";
+export type Restrictions = "owner" | "guildOwner";
 export type AllowedChannels = "text" | "dm";
-
-export interface ArgumentPromptOptions {
-  /**
-   * The start message.
-   */
-  start?: MessageContent | PromptMessage;
-  /**
-   * The retry message.
-   */
-  retry?: MessageContent | PromptMessage;
-  /**
-   * The amount of tries this argument will use before giving up.
-   */
-  tries?: number;
-}
-
-export interface CommandArgument {
-  /**
-   * The Id of this argument.
-   */
-  id: string;
-  /**
-   * The default value for this argument.
-   */
-  default?: any | ArgumentDefault;
-  /**
-   * This type of argument.
-   */
-  type: string;
-  /**
-   * Whether to prompt the user if the argument was omitted.
-   */
-  prompt?: ArgumentPromptOptions;
-}
+export type RegexProvider = (ctx: Context) => RegExp | Promise<RegExp>;
+export type Before = (ctx: Context) => boolean | Promise<boolean>;
+export type KeySupplier = (ctx: Context, args?: any) => string;
+export type ExecutionPredicate = (ctx: Context) => boolean;
 
 export interface CommandDescription {
   /**
@@ -77,7 +47,7 @@ export interface CommandOptions extends ComponentOptions {
   /**
    * The command arguments.
    */
-  args?: CommandArgument[];
+  args?: ArgumentOptions[] | ArgumentGenerator;
   /**
    * Command Restrictions
    */
@@ -105,7 +75,7 @@ export interface CommandOptions extends ComponentOptions {
   /**
    * The amount of times the command can be ran before being ratelimited.
    */
-  ratelimit?: number;
+  bucket?: number;
   /**
    * The cooldown for this command.
    */
@@ -122,8 +92,37 @@ export interface CommandOptions extends ComponentOptions {
    * Whether this command is guarded or not.
    */
   guarded?: boolean
+  /**
+   * User ID(s) or a function that will be ignored when checking permissions.
+   */
+  ignorePermissions?: string | string[] | IgnorePermissions;
+  /**
+   * User ID(s) or a function that will be ignored when checking cooldowns.
+   */
+  ignoreCooldown?: string | string[] | IgnoreCooldown;
+  /**
+   * Specific prefixes for this command.
+   */
+  prefixes?: string | string[] | PrefixProvider;
+  /**
+   * Default argument options for this command.
+   */
+  argumentDefaults?: DefaultArgumentOptions;
+  /**
+   * Use a regexp as a invoke.
+   */
+  regex?: RegExp | RegexProvider;
+  /**
+   * A method called before this command gets ran.
+   */
+  before?: Before;
+  flags?: string[];
+  optionFlags?: string[];
+  quoted?: boolean;
+  separator?: string;
+  lock?: "guild" | "channel" | "user" | KeySupplier;
+  condition?: ExecutionPredicate;
 }
-
 
 /**
  * The base command class.
@@ -135,17 +134,16 @@ export class Command extends Component {
    * @since 1.0.0
    */
   public readonly store!: CommandStore;
-
+  public readonly locker: Set<KeySupplier> = new Set();
+  /**
+   * The aliases for this command.
+   */
+  public aliases: string[];
   /**
    * This commands description.
    * @since 1.0.0
    */
   public description: CommandDescription;
-  /**
-   * The arguments for this command.
-   * @since 1.0.0
-   */
-  public args: CommandArgument[];
   /**
    * Restrictions for this command.
    * @since 1.0.0
@@ -180,7 +178,7 @@ export class Command extends Component {
    * The amount of times the command can be ran before being ratelimited.
    * @since 1.0.0
    */
-  public ratelimit: number;
+  public bucket: number;
   /**
    * The cooldown for this command.
    * @since 1.0.0
@@ -201,6 +199,36 @@ export class Command extends Component {
    * @since 1.0.0
    */
   public guarded: boolean
+  /**
+   * Specific prefixes for this command.
+   * @since 1.0.0
+   */
+  public prefix: string[] | PrefixProvider | null;
+  /**
+   * Default argument options for this command.
+   * @since 1.0.0
+   */
+  public argumentDefaults: DefaultArgumentOptions
+  /**
+   * A method that gets called right before the command gets ran.
+   * @since 1.0.0
+   */
+  public before: Before;
+  /**
+   * A condition method that gets called before this command runs.
+   * @since 1.0.0
+   */
+  public condition: ExecutionPredicate;
+  /**
+   * Use a regexp as an invoke
+   * @since 1.0.0
+   */
+  public regex: RegExp | RegexProvider | null;
+  public lock: KeySupplier | null;
+
+  #contentParser: ContentParser;
+  #argumentGenerator: ArgumentGenerator;
+  #argumentRunner: ArgumentRunner = new ArgumentRunner(this);
 
   /**
    * Creates a new Command.
@@ -212,19 +240,90 @@ export class Command extends Component {
   public constructor(store: CommandStore, dir: string, file: string[], options: CommandOptions = {}) {
     super(store, dir, file, options);
 
+    options = Util.deepAssign({ args: [] }, options);
+
+    const { flagWords, optionFlagWords } = Array.isArray(options.args)
+      ? ContentParser.getFlags(options.args)
+      : { flagWords: options.flags, optionFlagWords: options.optionFlags };
+
+    this.#contentParser = new ContentParser({
+      flagWords,
+      optionFlagWords,
+      quoted: options.quoted ?? true,
+      separator: options.separator
+    });
+
+    this.#argumentGenerator = Array.isArray(options.args)
+      ? ArgumentRunner.fromArguments(options.args!.map((arg) => [ arg.id!, new Argument(this, arg) ]))
+      : options.args!.bind(this);
+
+    this.argumentDefaults = options.argumentDefaults ?? {}
+    this.aliases = [...(options.aliases ?? []), this.name];
     this.description = options.description ?? {}
-    this.args = options.args ?? [];
-    this.restrictions = options.restrictions ? Util.array(options.restrictions) : [];
-    this.channel = options.channel ? Util.array(options.channel) : [ "dm", "text" ];
-    this.userPermissions = options.userPermissions ? Util.array(options.userPermissions) : [];
-    this.permissions = options.permissions ? Util.array(options.permissions) : [];
-    this.inhibitors = options.inhibitors ? Util.array(options.inhibitors) : [];
     this.editable = options.editable ?? true;
-    this.ratelimit = options.ratelimit ?? 1;
+    this.bucket = options.bucket ?? 1;
     this.cooldown = options.cooldown ?? 5000;
-    this.cooldownType = options.cooldownType ?? "user";
+    this.cooldownType = options.cooldownType ?? "author";
     this.hidden = options.hidden ?? false;
     this.guarded = options.guarded ?? false;
+    this.restrictions = options.restrictions
+      ? Util.array(options.restrictions)
+      : [];
+    this.channel = options.channel
+      ? Util.array(options.channel)
+      : [ "dm", "text" ];
+    this.userPermissions = options.userPermissions
+      ? Util.array(options.userPermissions)
+      : [];
+    this.permissions = options.permissions
+      ? Util.array(options.permissions)
+      : [];
+    this.inhibitors = options.inhibitors
+      ? Util.array(options.inhibitors)
+      : [];
+    this.before = options.before
+      ? options.before.bind(this)
+      : () => true;
+    this.prefix = options.prefixes
+      ? typeof options.prefixes === "function"
+        ? options.prefixes.bind(this)
+        : Util.array(options.prefixes)
+      : null;
+    this.regex = options.regex
+      ? typeof options.regex === "function"
+        ? options.regex.bind(this)
+        : options.regex
+      : null;
+    this.condition = options.condition
+      ? options.condition.bind(this)
+      : () => false;
+
+    this.lock = options.lock as KeySupplier;
+
+
+    if (typeof options.lock === "string") {
+      this.lock = ({
+        guild: (ctx) => ctx.guild && ctx.guild.id,
+        channel: (ctx) => ctx.channel.id,
+        user: (ctx) => ctx.author.id,
+      } as Record<string, KeySupplier>)[options.lock];
+    }
+  }
+
+  /**
+   * Returns the bytecode of the required user permissions.
+   * @since 1.0.0
+   */
+  public get userPermissionsBytecode(): number {
+    return this.userPermissions.reduce((acc, perm) => acc |= perm.allow, 0);
+  }
+
+  /**
+   * Returns the bytecode of the required client permissions.
+   * @since 1.0.0
+   */
+  public get permissionsBytecode(): number {
+    return this.permissions.reduce((acc, perm) => acc |= perm.allow, 0);
   }
 
   /**
@@ -241,8 +340,17 @@ export class Command extends Component {
    * @param ctx The message context for this execution.
    * @param args The parsed arguments.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async run(ctx: Context, args?: []): Promise<any> {
+  public async run(ctx: Context, args: Record<string, any>): Promise<any> {
     throw new MethodNotImplementedError();
+  }
+
+  /**
+   * Parses the arguments of this command.
+   * @param message
+   * @param content
+   */
+  public parse(message: Message, content: string): Promise<any> {
+    const parsed = this.#contentParser.parse(content);
+    return this.#argumentRunner.run(message, parsed, this.#argumentGenerator);
   }
 }

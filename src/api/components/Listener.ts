@@ -7,7 +7,7 @@ import type { LiteEmitter } from "../..";
 
 export type Emitter = EventEmitter | LiteEmitter;
 type Fn = (...args: any[]) => any;
-type Mode = "once" | "on" | "off";
+type Mode = "once" | "on";
 type Mappings = Record<string, Fn | string | ListenerMapping>;
 
 export interface ListenerOptions extends ComponentOptions {

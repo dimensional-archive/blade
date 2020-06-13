@@ -3,12 +3,17 @@ import { Context } from "./Context";
 import { EmbedBuilder } from "../../..";
 
 export class ReplyBuilder {
+  public readonly ctx: Context
+
   private _embed?: EmbedOptions;
   private _content?: string;
-  private _tts = false;
-  private _files: MessageFile[] = [];
+  private _tts;
+  private readonly _files: MessageFile[];
 
-  public constructor(public ctx: Context) {
+  public constructor(ctx: Context) {
+    this.ctx = ctx;
+    this._tts = false;
+    this._files = [];
   }
 
   public content(str: string): ReplyBuilder {

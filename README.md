@@ -11,6 +11,15 @@
 
 Support **wont** be public...
 
+## Credit
+
+[Nino](https://github.com/NinoDiscord/Nino) - Permissions Utility Class and the original EmbedBuilder.
+[Discord-Akairo](https://github.com/discord-akairo/discord-akairo) - Argument Parsing
+[@klasa/cache](https://github.com/dirigeants/cache) - For the "Storage" Utility Class.
+[@klasa/ratelimits](https://github.com/dirigeants/ratelimits) - For the Ratelimit Utility Class.
+
 ---
 
 KyuDiscord &copy; 2020
+
+

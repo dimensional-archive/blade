@@ -93,18 +93,6 @@ export class LiteEmitter {
   }
 
   /**
-   * Add a handler function for a given event.
-   * @param event The name of the event.
-   * @param callback
-   */
-  public off(event: string, callback: LiteEmitterHandler): this {
-    this.addListener(event, callback);
-
-    return this;
-  }
-
-
-  /**
    * Emit a new event to handlers.
    * @param event The name of the event.
    * @param args Event arguments.

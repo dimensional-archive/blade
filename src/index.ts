@@ -1,19 +1,20 @@
-export * from "./api/Client";
+import { Message, TextChannel, Guild as ErisGuild } from "eris";
+import { Context } from "./api/components/command";
 
-export * from "./api/components/command/Context";
-export * from "./api/components/command/Command";
-export * from "./api/components/command/ReplyBuilder";
-export * from "./api/components/Listener";
-export * from "./api/components/Monitor";
-export * from "./api/components/Base";
+declare module "eris" {
+  interface Message {
+    guild: ErisGuild;
+    ctx: Context;
+  }
+}
 
-export * from "./api/stores/Listener";
-export * from "./api/stores/Command";
-export * from "./api/stores/Monitor";
-export * from "./api/stores/Base"
+Object.defineProperty(Message.prototype, "guild", {
+  get(this: Message): any {
+    return this.channel instanceof TextChannel
+      ? this.channel.guild
+      : undefined;
+  }
+})
 
-export * from "./api/Client"
-
-export * from "./utils/EmbedBuilder";
-export * from "./utils/LiteEmitter";
-export * from "./utils/Util";
+export * from "./api";
+export * from "./utils";

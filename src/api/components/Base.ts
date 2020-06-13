@@ -66,7 +66,6 @@ export abstract class Component {
   }
 
   private static _defaults: ComponentOptions = {
-    name: "",
     disabled: false,
     category: "General"
   }

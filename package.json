@@ -1,5 +1,5 @@
 {
-  "name": "@kyu/core",
+  "name": "kyu-blade",
   "version": "1.0.0",
   "main": "dist/index.js",
   "repository": "git@github.com:LolWastedJS/Kyu.git",
@@ -8,10 +8,14 @@
   "scripts": {
     "build": "rimraf dist && tsc",
     "watch": "rimraf dist && tsc && tsc -w",
-    "test": "yarn build && node test/index.js"
+    "test": "yarn build && node test/index.js",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "@ayanaware/errors": "^1.1.0",
+    "@klasa/event-iterator": "^0.0.10",
+    "@klasa/timer-manager": "^0.0.1",
+    "dotenv": "^8.2.0",
     "eris": "^0.13.1"
   },
   "devDependencies": {
