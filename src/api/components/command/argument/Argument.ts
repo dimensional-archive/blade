@@ -15,7 +15,7 @@ import type {
 } from "./Types";
 import { ArgumentMatches, ArgumentTypes } from "../../../../utils/Constants";
 import type { BladeClient } from "../../../Client";
-import { CommandStore, ReplyBuilder, Util } from "../../../..";
+import { CommandStore, EmbedBuilder, ReplyBuilder, Util } from "../../../..";
 import { Flag } from "./Flag";
 
 import type { Message, MessageContent } from "eris";
@@ -440,6 +440,7 @@ export class Argument {
         }
       );
 
+      if (text instanceof EmbedBuilder) text = { embed: text.build() }
       if (Util.isFunction(text)) text = (await text.call(this, new ReplyBuilder(message.ctx), message.ctx)).build()[0];
       if (Array.isArray(text)) text = text.join("\n");
 

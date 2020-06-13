@@ -1,10 +1,11 @@
 import { ReplyBuilder } from "./ReplyBuilder";
-import type { Message, MessageContent, MessageFile, TextableChannel, User } from "eris";
+import type { Message, MessageContent, TextableChannel, User } from "eris";
 import { Guild, Member } from "eris";
 import type { Command } from "./Command";
 import type { BladeClient } from "../../Client";
 import type { CommandStore } from "../../..";
-export declare type Content = MessageContent | ((builder: ReplyBuilder, ctx: Context) => ReplyBuilder | Promise<ReplyBuilder>);
+import { EmbedBuilder } from "../../..";
+export declare type Content = MessageContent | EmbedBuilder | ((builder: ReplyBuilder, ctx: Context) => ReplyBuilder | Promise<ReplyBuilder>);
 export interface ContextData {
     afterPrefix?: string;
     alias?: string;
@@ -53,21 +54,19 @@ export declare class Context {
      * Transforms any reply builders.
      * @since 1.0.0
      */
-    static getTransformed(context: Context, message: MessageContent | ((builder: ReplyBuilder, ctx: Context) => ReplyBuilder | Promise<ReplyBuilder>), files?: MessageFile[]): Promise<[MessageContent, MessageFile[]]>;
+    static getTransformed(context: Context, message: Content): Promise<MessageContent>;
     /**
      * Sends a response or edits an old response if available.
      * @param content The content of the response.
-     * @param files Any files to send along with the response.
      * @since 1.0.0
      */
-    reply(content: Content, files?: MessageFile[]): Promise<Message>;
+    reply(content: Content): Promise<Message>;
     /**
      * Sends a response, overwriting the last response.
      * @param content The content to send.
-     * @param files Any files to send.
      * @since 1.0.0
      */
-    sendNew(content: Content, files?: MessageFile[]): Promise<Message>;
+    sendNew(content: Content): Promise<Message>;
     /**
      * Edits the last response.
      * @param content Edit content.
