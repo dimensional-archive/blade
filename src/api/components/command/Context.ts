@@ -114,7 +114,7 @@ export class Context {
     const transformed = await Context.getTransformed(this, content);
 
     if (this.shouldEdit && (this.command ? this.command!.editable : true) && !this.lastResponse!.attachments.length) {
-      return this.lastResponse!.edit(transformed[0]);
+      return this.lastResponse!.edit(transformed);
     }
 
     const sent = await this.message.channel.createMessage(transformed);

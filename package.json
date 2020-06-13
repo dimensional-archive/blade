@@ -10,7 +10,8 @@
     "build": "rimraf dist && tsc",
     "watch": "rimraf dist && tsc && tsc -w",
     "test": "yarn build && node test/index.js",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "git:add": "yarn build && git add ."
   },
   "dependencies": {
     "@ayanaware/errors": "^1.1.0",
