@@ -13,7 +13,7 @@ class Listener extends Base_1.Component {
         var _a, _b, _c;
         super(store, dir, file, options);
         /**
-         * Map of listeners.
+         * Map of events.
          * @since 1.0.0
          * @private
          */

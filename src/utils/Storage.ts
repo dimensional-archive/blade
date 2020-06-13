@@ -50,10 +50,10 @@ export class Storage<K, V> extends Map<K, V> {
    * @param fn Function used to find what you are looking for
    * @param thisArg Optional binding for the fn param
    */
-  public find(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): [ K, V ] | undefined {
+  public find(fn: (value: V, key?: K, map?: this) => boolean, thisArg?: any): V | undefined {
     if (typeof thisArg !== 'undefined') fn = fn.bind(thisArg);
 
-    for (const [ key, val ] of this) if (fn(val, key, this)) return [ key, val ];
+    for (const [ key, val ] of this) if (fn(val, key, this)) return val;
     return undefined;
   }
 

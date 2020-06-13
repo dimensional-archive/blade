@@ -1,5 +1,6 @@
 src/
 .gitignore
-*.lock tsconfig.json
+*.lock
+tsconfig.json
 .eslintrc.js
 test/

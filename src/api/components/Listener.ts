@@ -67,7 +67,7 @@ export class Listener extends Component {
    */
   public mode: Mode;
   /**
-   * Map of listeners.
+   * Map of events.
    * @since 1.0.0
    * @private
    */

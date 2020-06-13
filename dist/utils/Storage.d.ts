@@ -32,7 +32,7 @@ export declare class Storage<K, V> extends Map<K, V> {
      * @param fn Function used to find what you are looking for
      * @param thisArg Optional binding for the fn param
      */
-    find(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): [K, V] | undefined;
+    find(fn: (value: V, key?: K, map?: this) => boolean, thisArg?: any): V | undefined;
     /**
      * Finds a key from this Storage
      * @param fn Function used to find what you are looking for
