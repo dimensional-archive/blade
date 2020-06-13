@@ -7,7 +7,7 @@ import { Command, Util } from "../..";
 
 export class InhibitorStore extends ComponentStore<Inhibitor> {
   constructor(client: BladeClient, options: ComponentStoreOptions = {}) {
-    super(client, "events", {
+    super(client, "inhibitors", {
       classToHandle: Inhibitor,
       ...options
     });
