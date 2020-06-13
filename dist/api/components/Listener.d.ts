@@ -73,7 +73,7 @@ export declare class Listener extends Component {
      * @constructor
      */
     static Setup(options: ListenerOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
-    run(): any;
+    run(...args: any[]): any | Promise<any>;
     /**
      * Attaches the proper listener to the emitter
      * @since 1.0.0

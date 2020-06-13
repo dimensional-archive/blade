@@ -249,7 +249,7 @@ export declare class Command extends Component {
      * @param ctx The message context for this execution.
      * @param args The parsed arguments.
      */
-    run(ctx: Context, args: Record<string, any>): Promise<any>;
+    run(ctx: Context, args?: Record<string, any>): any | Promise<any>;
     /**
      * Parses the arguments of this command.
      * @param message

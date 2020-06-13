@@ -340,7 +340,7 @@ export class Command extends Component {
    * @param ctx The message context for this execution.
    * @param args The parsed arguments.
    */
-  public async run(ctx: Context, args: Record<string, any>): Promise<any> {
+  public run(ctx: Context, args?: Record<string, any>): any | Promise<any> {
     throw new MethodNotImplementedError();
   }
 

@@ -95,7 +95,7 @@ export class Listener extends Component {
   }
 
 
-  public run(): any {
+  public run(...args: any[]): any | Promise<any> {
     throw new MethodNotImplementedError();
   }
 
