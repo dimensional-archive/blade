@@ -523,7 +523,7 @@ export class CommandStore extends ComponentStore<Command> {
     command: Command,
     args: Record<string, any>
   ) {
-    message.channel.sendTyping();
+    if (this.handling.sendTyping) await message.channel.sendTyping();
 
     try {
       this.emit(CommandStoreEvents.COMMAND_STARTED, message, command);
