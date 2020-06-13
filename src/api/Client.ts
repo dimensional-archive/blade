@@ -6,6 +6,7 @@ import { dirname } from "path";
 import { ClientUtil } from "../utils/ClientUtil";
 import { CommandStore, Storage } from "..";
 import Permissions from "../utils/Permissions";
+import { Logger } from "@ayanaware/logger";
 
 export interface BladeClientOptions extends ClientOptions {
   directory?: string;
@@ -20,6 +21,11 @@ export interface BladeClientOptions extends ClientOptions {
  */
 export class BladeClient extends Client {
   public static basePermissions = [ Constants.Permissions.sendMessages, Constants.Permissions.readMessages ];
+  /**
+   * This client's logger.
+   * @since 1.0.4
+   */
+  public readonly logger: Logger;
   /**
    * A utility class for resolving different classes like Emoji and Member.
    * @since 1.0.0
@@ -58,6 +64,7 @@ export class BladeClient extends Client {
   public constructor(options: BladeClientOptions) {
     super(options.token, options);
 
+    this.logger = Logger.custom("blade", "@kyu", "");
     this.util = new ClientUtil()
     this.directory = options.directory ?? dirname(require.main!.filename);
     this.started = false;

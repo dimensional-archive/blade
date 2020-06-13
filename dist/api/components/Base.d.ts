@@ -1,5 +1,6 @@
 import type { ComponentStore } from "../stores/Base";
 import type { BladeClient } from "../Client";
+import { Logger } from "@ayanaware/logger";
 export interface ComponentOptions {
     name?: string;
     disabled?: boolean;
@@ -11,6 +12,11 @@ export interface ComponentOptions {
  * @abstract
  */
 export declare abstract class Component {
+    /**
+     * This components logger.
+     * @since 1.0.4
+     */
+    readonly logger: Logger;
     /**
      * The blade client.
      * @since 1.0.0

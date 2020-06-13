@@ -1,6 +1,6 @@
 {
   "name": "@kyu/blade",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:LolWastedJS/Kyu.git",
@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@ayanaware/errors": "^1.1.0",
+    "@ayanaware/logger": "^2.2.1",
     "@klasa/event-iterator": "^0.0.10",
     "@klasa/timer-manager": "^0.0.1",
     "eris": "^0.13.1"

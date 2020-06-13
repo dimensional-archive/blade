@@ -2,6 +2,7 @@ import { join } from "path";
 
 import type { ComponentStore } from "../stores/Base";
 import type { BladeClient } from "../Client";
+import { Logger } from "@ayanaware/logger";
 
 export interface ComponentOptions {
   name?: string;
@@ -15,6 +16,11 @@ export interface ComponentOptions {
  * @abstract
  */
 export abstract class Component {
+  /**
+   * This components logger.
+   * @since 1.0.4
+   */
+  public readonly logger: Logger;
   /**
    * The blade client.
    * @since 1.0.0
@@ -55,14 +61,15 @@ export abstract class Component {
   protected constructor(store: ComponentStore<Component>, directory: string, file: string[], options: ComponentOptions = {}) {
     options = Object.assign(options, Component._defaults);
 
-    this.client = store.client;
-    this.store = store;
     this.file = file;
     this.directory = directory;
-
     this.name = options.name ?? file[file.length - 1].slice(0, -3);
     this.disabled = options.disabled ?? false;
     this.fullCategory = file.slice(0, -1);
+
+    this.client = store.client;
+    this.store = store;
+    this.logger = Logger.custom(this.name, "@kyu/blade", () => `${store.name}.${this.category}.`)
   }
 
   private static _defaults: ComponentOptions = {

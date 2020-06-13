@@ -7,6 +7,13 @@
   resolved "https://registry.yarnpkg.com/@ayanaware/errors/-/errors-1.1.0.tgz#f2cb5c73d60e9236d7e5c0b97a76083184f79a80"
   integrity sha512-YJixth1wsnzUbwXwKDmP4f9b7eBmuLL6/8sgeAAvlQlUHxBdcAafKjk655OvsGqoqYoHiM6CKx1coN8Lews+ZA==
 
+"@ayanaware/logger@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@ayanaware/logger/-/logger-2.2.1.tgz#c3ea6fb804d598020631ba83b477ac035d8dadb4"
+  integrity sha512-POi1s4Fbe4c2XUIV+85zQT9V23+0luu52SIrYiYxXBofirE9omFXhatUOERppZXnY8A9hJoCjl3kvdMkWybGag==
+  dependencies:
+    fecha "^4.1.0"
+
 "@babel/code-frame@^7.0.0":
   version "7.10.1"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.10.1.tgz#d5481c5095daa1c57e16e54c6f9198443afb49ff"
@@ -441,6 +448,11 @@ fast-levenshtein@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
+
+fecha@^4.1.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/fecha/-/fecha-4.2.0.tgz#3ffb6395453e3f3efff850404f0a59b6747f5f41"
+  integrity sha512-aN3pcx/DSmtyoovUudctc8+6Hl4T+hI9GBBHLjA76jdZl7+b1sgh5g4k+u/GL3dTy1/pnYzKp69FpJ0OicE3Wg==
 
 figures@^3.0.0:
   version "3.2.0"

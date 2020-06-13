@@ -2,6 +2,7 @@ import { Client, ClientOptions, Member, OAuthApplicationInfo, User } from "eris"
 import { ComponentStore } from "./stores/Base";
 import { Component } from "./components/Base";
 import { ClientUtil } from "../utils/ClientUtil";
+import { Logger } from "@ayanaware/logger";
 export interface BladeClientOptions extends ClientOptions {
     directory?: string;
     token: string;
@@ -14,6 +15,11 @@ export interface BladeClientOptions extends ClientOptions {
  */
 export declare class BladeClient extends Client {
     static basePermissions: (2048 | 1024)[];
+    /**
+     * This client's logger.
+     * @since 1.0.4
+     */
+    readonly logger: Logger;
     /**
      * A utility class for resolving different classes like Emoji and Member.
      * @since 1.0.0
