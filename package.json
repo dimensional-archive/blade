@@ -1,5 +1,5 @@
 {
-  "name": "kyu-blade",
+  "name": "@kyu/blade",
   "version": "1.0.3",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
