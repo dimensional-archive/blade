@@ -159,6 +159,11 @@ export class Listener extends Component {
   }
 
 
-  private getEmitter = (v: string | Emitter): Emitter => typeof v === "string" ? this.store.emitters[v] : v;
-  private getFunction = (v: string | Fn): Fn => (typeof v !== "string" ? v : this[v]).bind(this);
+  private getEmitter(v: string | Emitter): Emitter {
+    return typeof v === "string" ? this.store.emitters[v] : v;
+  }
+
+  private getFunction(v: string | Fn): Fn {
+    return (typeof v !== "string" ? v : this[v]).bind(this);
+  }
 }
