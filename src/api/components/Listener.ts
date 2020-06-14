@@ -124,7 +124,7 @@ export class Listener extends Component {
             return this.emitter[this.mode](event, fn);
           }
 
-          const fn = this[`on${event.slice(0, 1).toUpperCase() + event.substring(1).toLowerCase()}`];
+          const fn = this[`on${event.slice(0, 1).toUpperCase() + event.substring(1).toLowerCase()}`].bind(this);
           this._listeners[event] = fn;
           return this.emitter[this.mode](event, fn);
         }
