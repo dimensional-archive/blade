@@ -119,15 +119,8 @@ export type ArgumentType =
   | (string | string[])[]
   | RegExp
   | string;
-export type Modifier<D, T> = (
-  ctx?: Context,
-  text?: Content,
-  data?: D
-) => T | Promise<T>;
+
+export type Modifier<D, T> = (ctx?: Context, text?: Content, data?: D) => T | Promise<T>;
 export type Supplier<D, T> = (message: Message, data?: D) => T | Promise<T>;
 export type ArgumentTypeCaster = (message: Message, value?: any) => any;
-export type ParsedValuePredicate = (
-  message?: Message,
-  phrase?: string,
-  value?: any
-) => boolean
+export type ParsedValuePredicate = (message?: Message, phrase?: string, value?: any) => boolean;
