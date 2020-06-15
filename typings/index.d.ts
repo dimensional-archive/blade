@@ -6,46 +6,34 @@
 //   ../@ayanaware/errors
 //   ../events
 
-declare module '@kyu/blade' {
-  export * from "@kyu/blade/api";
-  export * from "@kyu/blade/utils";
-}
+import {
+  Permission,
+  Base,
+  Client,
+  ClientOptions,
+  Collection,
+  EmbedOptions,
+  Emoji,
+  Guild,
+  GuildChannel,
+  Member,
+  Message,
+  MessageContent,
+  MessageFile,
+  OAuthApplicationInfo,
+  PrivateChannel,
+  Role,
+  TextableChannel,
+  TextChannel,
+  User,
+  VoiceChannel
+} from "eris";
+import { Logger } from "@ayanaware/logger";
+import { EventIterator, EventIteratorOptions } from '@klasa/event-iterator';
+import { GenericError } from "@ayanaware/errors";
+import type { EventEmitter } from "events";
 
-declare module '@kyu/blade/api/components/command' {
-  export * from "@kyu/blade/api/components/command/ratelimit/Ratelimit";
-  export * from "@kyu/blade/api/components/command/ratelimit/RatelimitManager";
-  export * from "@kyu/blade/api/components/command/argument/Types";
-  export * from "@kyu/blade/api/components/command/argument/TypeResolver";
-  export * from "@kyu/blade/api/components/command/argument/Flag";
-  export * from "@kyu/blade/api/components/command/argument/ArgumentRunner";
-  export * from "@kyu/blade/api/components/command/argument/Argument";
-  export * from "@kyu/blade/api/components/command/argument/ContentParser";
-  export * from "@kyu/blade/api/components/command/Context";
-  export * from "@kyu/blade/api/components/command/ReplyBuilder";
-  export * from "@kyu/blade/api/components/command/Command";
-}
-
-declare module '@kyu/blade/api' {
-  export * from "@kyu/blade/api/Client";
-  export * from "@kyu/blade/api/other/Provider";
-  export * from "@kyu/blade/api/stores";
-  export * from "@kyu/blade/api/components";
-}
-
-declare module '@kyu/blade/utils' {
-  export * from "@kyu/blade/utils/collectors/iterators/Message";
-  export * from "@kyu/blade/utils/collectors/MessageCollector";
-  export * from "@kyu/blade/utils/collectors/Collector";
-  export * from "@kyu/blade/utils/Storage";
-  export * from "@kyu/blade/utils/ClientUtil";
-  export * from "@kyu/blade/utils/Constants";
-  export * from "@kyu/blade/utils/Permissions";
-  export * from "@kyu/blade/utils/Util";
-  export * from "@kyu/blade/utils/LiteEmitter";
-  export * from "@kyu/blade/utils/EmbedBuilder";
-}
-
-declare module '@kyu/blade/api/components/command/ratelimit/Ratelimit' {
+declare module "@kyu/blade" {
   /**
    * A ratelimit class.
    * @since 1.0.0
@@ -108,11 +96,6 @@ declare module '@kyu/blade/api/components/command/ratelimit/Ratelimit' {
      */
     resetTime(): this;
   }
-}
-
-declare module '@kyu/blade/api/components/command/ratelimit/RatelimitManager' {
-  import { Storage } from "@kyu/blade/utils/Storage";
-  import { Ratelimit } from "@kyu/blade/api/components/command/ratelimit/Ratelimit";
 
   export class RatelimitManager<K = string> extends Storage<K, Ratelimit> {
     /**
@@ -175,12 +158,6 @@ declare module '@kyu/blade/api/components/command/ratelimit/RatelimitManager' {
      */
     sweep(fn?: (value: Ratelimit, key: K, collection: this) => boolean, thisArg?: any): number;
   }
-}
-
-declare module '@kyu/blade/api/components/command/argument/Types' {
-  import { Content, Context } from "@kyu/blade/api/components/command/Context";
-  import { Message, MessageContent } from "eris";
-  import { Flag } from "@kyu/blade/api/components/command/argument/Flag";
 
   export interface ArgumentOptions {
     id?: string;
@@ -303,11 +280,6 @@ declare module '@kyu/blade/api/components/command/argument/Types' {
   export type Supplier<D, T> = (message: Message, data?: D) => T | Promise<T>;
   export type ArgumentTypeCaster = (message: Message, value?: any) => any;
   export type ParsedValuePredicate = (message?: Message, phrase?: string, value?: any) => boolean;
-}
-
-declare module '@kyu/blade/api/components/command/argument/TypeResolver' {
-  import { ArgumentTypeCaster } from "@kyu/blade/api/components/command/argument/Types";
-  import { BladeClient, CommandStore, InhibitorStore, ListenerStore, MonitorStore, Storage } from "@kyu/blade";
 
   export class TypeResolver {
     handler: CommandStore;
@@ -328,10 +300,6 @@ declare module '@kyu/blade/api/components/command/argument/TypeResolver' {
 
     addTypes(types: Record<string, ArgumentTypeCaster>): TypeResolver;
   }
-}
-
-declare module '@kyu/blade/api/components/command/argument/Flag' {
-  import { Message } from "eris";
 
   export class Flag {
     type: string;
@@ -353,18 +321,6 @@ declare module '@kyu/blade/api/components/command/argument/Flag' {
 
     static is(value: any, type: string): boolean;
   }
-}
-
-declare module '@kyu/blade/api/components/command/argument/ArgumentRunner' {
-  import { Command } from "@kyu/blade/api/components/command/Command";
-  import { Flag } from "@kyu/blade/api/components/command/argument/Flag";
-  import { ArgumentOptions } from "@kyu/blade/api/components/command/argument/Types";
-  import { ContentParserResult } from "@kyu/blade/api/components/command/argument/ContentParser";
-  import { Context } from "@kyu/blade/api/components/command/Context";
-  import { Message } from "eris";
-  import { Argument } from "@kyu/blade/api/components/command/argument/Argument";
-  import { BladeClient } from "@kyu/blade/api/Client"
-  import { CommandStore } from "@kyu/blade/api/stores/Command"
 
   export type ArgumentGenerator = (ctx: Context, parsed: ContentParserResult, state: ArgumentRunnerState) => IterableIterator<ArgumentOptions | Flag>;
 
@@ -411,27 +367,6 @@ declare module '@kyu/blade/api/components/command/argument/ArgumentRunner' {
 
     runNone(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
   }
-}
-
-declare module '@kyu/blade/api/components/command/argument/Argument' {
-  import type { TypeResolver } from "@kyu/blade/api/components/command/argument/TypeResolver";
-  import type { Command } from "@kyu/blade/api/components/command/Command";
-  import type { Content } from "@kyu/blade/api/components/command/Context";
-  import type {
-    ArgumentMatch,
-    ArgumentOptions,
-    ArgumentPromptOptions,
-    ArgumentType,
-    ArgumentTypeCaster,
-    FailureData,
-    Modifier,
-    ParsedValuePredicate,
-    Supplier
-  } from "@kyu/blade/api/components/command/argument/Types";
-  import type { BladeClient } from "@kyu/blade/api/Client";
-  import { CommandStore } from "@kyu/blade";
-  import { Flag } from "@kyu/blade/api/components/command/argument/Flag";
-  import type { Message } from "eris";
 
   export class Argument {
     command: Command;
@@ -483,10 +418,6 @@ declare module '@kyu/blade/api/components/command/argument/Argument' {
 
     collect(message: Message, commandInput?: string, parsedInput?: any): Promise<Flag | any>;
   }
-}
-
-declare module '@kyu/blade/api/components/command/argument/ContentParser' {
-  import { ArgumentOptions } from "@kyu/blade/api/components/command/argument/Types";
 
   export interface ContentParserOptions {
     flagWords?: string[];
@@ -526,16 +457,7 @@ declare module '@kyu/blade/api/components/command/argument/ContentParser' {
 
     parse(content: string): ContentParserResult;
   }
-}
 
-declare module '@kyu/blade/api/components/command/Context' {
-  import { ReplyBuilder } from "@kyu/blade/api/components/command/ReplyBuilder";
-  import type { Message, MessageContent, TextableChannel, User } from "eris";
-  import { Guild, Member } from "eris";
-  import type { Command } from "@kyu/blade/api/components/command/Command";
-  import type { BladeClient } from "@kyu/blade/api/Client";
-  import type { CommandStore } from "@kyu/blade";
-  import { EmbedBuilder } from "@kyu/blade";
   export type Content =
     MessageContent
     | EmbedBuilder
@@ -640,12 +562,6 @@ declare module '@kyu/blade/api/components/command/Context' {
      */
     setEditable(state: boolean): this;
   }
-}
-
-declare module '@kyu/blade/api/components/command/ReplyBuilder' {
-  import { EmbedOptions, Message, MessageContent, MessageFile, TextableChannel } from "eris";
-  import { Context } from "@kyu/blade/api/components/command/Context";
-  import { EmbedBuilder } from "@kyu/blade";
 
   export class ReplyBuilder {
     readonly ctx: Context;
@@ -664,16 +580,7 @@ declare module '@kyu/blade/api/components/command/ReplyBuilder' {
 
     build(): [ MessageContent, MessageFile[] ];
   }
-}
 
-declare module '@kyu/blade/api/components/command/Command' {
-  import { Component, ComponentOptions } from "@kyu/blade/api/components/Base";
-  import { CommandStore, IgnoreCooldown, IgnorePermissions, PrefixProvider } from "@kyu/blade";
-  import { Context } from "@kyu/blade/api/components/command/Context";
-  import type { Permission } from "eris";
-  import { Message } from "eris";
-  import type { ArgumentOptions, DefaultArgumentOptions } from "@kyu/blade/api/components/command/argument/Types";
-  import { ArgumentGenerator } from "@kyu/blade/api/components/command/argument/ArgumentRunner";
   export type CooldownType = "author" | "channel";
   export type Restrictions = "owner" | "guildOwner";
   export type AllowedChannels = "text" | "dm";
@@ -934,14 +841,6 @@ declare module '@kyu/blade/api/components/command/Command' {
      */
     parse(message: Message, content: string): Promise<any>;
   }
-}
-
-declare module '@kyu/blade/api/Client' {
-  import { Client, ClientOptions, Member, OAuthApplicationInfo, User } from "eris";
-  import { ComponentStore } from "@kyu/blade/api/stores/Base";
-  import { Component } from "@kyu/blade/api/components/Base";
-  import { ClientUtil } from "@kyu/blade/utils/ClientUtil";
-  import { Logger } from "@ayanaware/logger";
 
   export interface BladeClientOptions extends ClientOptions {
     directory?: string;
@@ -1014,10 +913,6 @@ declare module '@kyu/blade/api/Client' {
      */
     isOwner(resolvable: User | Member): boolean;
   }
-}
-
-declare module '@kyu/blade/api/other/Provider' {
-  import { Storage } from "@kyu/blade/utils";
 
   export abstract class Provider<V extends any> {
     protected storage: Storage<string, V>;
@@ -1030,27 +925,7 @@ declare module '@kyu/blade/api/other/Provider' {
 
     abstract update(id: string, value: any, path?: string): any | Promise<any>;
   }
-}
 
-declare module '@kyu/blade/api/stores' {
-  export * from "@kyu/blade/api/stores/Inhibitor";
-  export * from "@kyu/blade/api/stores/Monitor";
-  export * from "@kyu/blade/api/stores/Listener";
-  export * from "@kyu/blade/api/stores/Command";
-  export * from "@kyu/blade/api/stores/Base";
-}
-
-declare module '@kyu/blade/api/components' {
-  export * from "@kyu/blade/api/components/command";
-  export * from "@kyu/blade/api/components/Inhibitor";
-  export * from "@kyu/blade/api/components/Monitor";
-  export * from "@kyu/blade/api/components/Listener";
-  export * from "@kyu/blade/api/components/Base";
-}
-
-declare module '@kyu/blade/utils/collectors/iterators/Message' {
-  import { EventIterator, EventIteratorOptions } from '@klasa/event-iterator';
-  import { Message, PrivateChannel, TextableChannel } from "eris";
   export type MessageIteratorOptions = EventIteratorOptions<[ Message ]>;
 
   /**
@@ -1066,18 +941,11 @@ declare module '@kyu/blade/utils/collectors/iterators/Message' {
      */
     constructor(channel: TextableChannel | PrivateChannel, options?: MessageIteratorOptions);
   }
-}
 
-declare module '@kyu/blade/utils/collectors/MessageCollector' {
   /**
    * Options for a MessageCollector.
    * @since 0.0.1
    */
-  import { Message, PrivateChannel, TextableChannel } from "eris";
-  import { Storage } from "@kyu/blade/utils/Storage";
-  import { Collector } from "@kyu/blade/utils/collectors/Collector";
-  import { MessageIterator } from "@kyu/blade/utils/collectors/iterators/Message";
-
   export interface MessageCollectorOptions {
     /**
      * The amount of messages to collect before ending the collector.
@@ -1109,12 +977,6 @@ declare module '@kyu/blade/utils/collectors/MessageCollector' {
      */
     constructor(channel: TextableChannel | PrivateChannel, options: MessageCollectorOptions);
   }
-}
-
-declare module '@kyu/blade/utils/collectors/Collector' {
-  import type { EventIterator } from '@klasa/event-iterator';
-  import { Storage } from "@kyu/blade/utils/Storage";
-  import { Base } from "eris";
 
   /**
    * The base structure collector for asynchronously collecting values.
@@ -1140,9 +1002,7 @@ declare module '@kyu/blade/utils/collectors/Collector' {
      */
     collect(): Promise<Storage<string, T>>;
   }
-}
 
-declare module '@kyu/blade/utils/Storage' {
   /**
    * A storage structure.
    * @since 1.0.0
@@ -1271,23 +1131,7 @@ declare module '@kyu/blade/utils/Storage' {
      */
     sorted(compareFunction?: (v0: V, v1: V, k0?: K, k1?: K) => number): Storage<K, V>;
   }
-}
 
-declare module '@kyu/blade/utils/ClientUtil' {
-  import {
-    Collection,
-    Emoji,
-    Guild,
-    Member,
-    Message,
-    Role,
-    TextableChannel,
-    TextChannel,
-    User,
-    VoiceChannel
-  } from "eris";
-  import { Storage } from "@kyu/blade";
-  import { MessageCollectorOptions } from "@kyu/blade/utils/collectors/MessageCollector";
   type Channel = TextChannel | VoiceChannel;
 
   export class ClientUtil {
@@ -1331,9 +1175,7 @@ declare module '@kyu/blade/utils/ClientUtil' {
   }
 
   export {};
-}
 
-declare module '@kyu/blade/utils/Constants' {
   export enum ArgumentMatches {
     PHRASE = "phrase",
     FLAG = "flag",
@@ -1394,13 +1236,10 @@ declare module '@kyu/blade/utils/Constants' {
     INHIBITOR = "inhibitor",
     LISTENER = "listener"
   }
-}
 
-declare module '@kyu/blade/utils/Permissions' {
   /**
    * Credit goes to: https://github.com/NinoDiscord/Nino/blob/edge/src/util/PermissionUtils.ts
    */
-  import { GuildChannel, Member, Role } from 'eris';
   /**
    * Contains utility functions to help with permission checking and hierarchy.
    * @since 1.0.0
@@ -1443,9 +1282,7 @@ declare module '@kyu/blade/utils/Permissions' {
 
     static add(...a: number[]): number;
   }
-}
 
-declare module '@kyu/blade/utils/Util' {
   export abstract class Util {
     static array<T>(v: T | T[]): T[];
 
@@ -1467,10 +1304,7 @@ declare module '@kyu/blade/utils/Util' {
 
     static choice<T>(...xs: T[]): T | null;
   }
-}
 
-declare module '@kyu/blade/utils/LiteEmitter' {
-  import { GenericError } from "@ayanaware/errors";
   type LiteEmitterHandler = (...args: Array<any>) => void;
 
   /**
@@ -1528,10 +1362,6 @@ declare module '@kyu/blade/utils/LiteEmitter' {
   }
 
   export {};
-}
-
-declare module '@kyu/blade/utils/EmbedBuilder' {
-  import { EmbedOptions } from "eris";
 
   export interface Embed {
     title?: string;
@@ -1599,12 +1429,6 @@ declare module '@kyu/blade/utils/EmbedBuilder' {
 
     build(): EmbedOptions;
   }
-}
-
-declare module '@kyu/blade/api/components/Base' {
-  import type { ComponentStore } from "@kyu/blade/api/stores/Base";
-  import type { BladeClient } from "@kyu/blade/api/Client";
-  import { Logger } from "@ayanaware/logger";
 
   export interface ComponentOptions {
     name?: string;
@@ -1711,13 +1535,7 @@ declare module '@kyu/blade/api/components/Base' {
      */
     enable(): Promise<Component>;
   }
-}
 
-declare module '@kyu/blade/api/stores/Base' {
-  import { LiteEmitter } from "@kyu/blade/utils/LiteEmitter";
-  import { Component, ComponentOptions } from "@kyu/blade/api/components/Base";
-  import { Storage } from "@kyu/blade/utils/Storage";
-  import type { BladeClient } from "@kyu/blade/api/Client";
   export type LoadFilter = (file: string) => boolean | Promise<boolean>;
   export type ComponentResolvable<T> = string | T;
 
@@ -1824,14 +1642,6 @@ declare module '@kyu/blade/api/stores/Base' {
      */
     toString(): string;
   }
-}
-
-declare module '@kyu/blade/api/stores/Inhibitor' {
-  import { ComponentStore, ComponentStoreOptions } from "@kyu/blade/api/stores/Base";
-  import { Inhibitor, InhibitorType } from "@kyu/blade/api/components/Inhibitor";
-  import type { BladeClient } from "@kyu/blade/api/Client";
-  import { Message } from "eris";
-  import { Command } from "@kyu/blade";
 
   export class InhibitorStore extends ComponentStore<Inhibitor> {
     constructor(client: BladeClient, options?: ComponentStoreOptions);
@@ -1844,13 +1654,6 @@ declare module '@kyu/blade/api/stores/Inhibitor' {
      */
     test(type: InhibitorType, message: Message, command?: Command): Promise<string | null>;
   }
-}
-
-declare module '@kyu/blade/api/stores/Monitor' {
-  import { Monitor } from "@kyu/blade/api/components/Monitor";
-  import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "@kyu/blade/api/stores/Base";
-  import { LiteEmitter } from "@kyu/blade";
-  import type { BladeClient } from "@kyu/blade/api/Client";
 
   /**
    * A monitor store that handles loading of monitors.
@@ -1883,12 +1686,6 @@ declare module '@kyu/blade/api/stores/Monitor' {
      */
     add(component: Monitor): Monitor | null;
   }
-}
-
-declare module '@kyu/blade/api/stores/Listener' {
-  import { Emitter, Listener } from "@kyu/blade/api/components/Listener";
-  import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "@kyu/blade/api/stores/Base";
-  import type { BladeClient } from "@kyu/blade/api/Client";
 
   export interface ListenerStoreOptions extends ComponentStoreOptions {
     emitters?: Record<string, Emitter>;
@@ -1911,14 +1708,7 @@ declare module '@kyu/blade/api/stores/Listener' {
      */
     add(component: Listener): Listener | null;
   }
-}
 
-declare module '@kyu/blade/api/stores/Command' {
-  import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "@kyu/blade/api/stores/Base";
-  import { Context, ContextData, InhibitorStore, ListenerStore, MonitorStore, Storage, TypeResolver } from "@kyu/blade";
-  import type { BladeClient } from "@kyu/blade/api/Client";
-  import type { Channel, Message, User } from "eris";
-  import { Command, DefaultArgumentOptions } from "@kyu/blade/api/components/command";
   export type IgnorePermissions = (message: Message, command: Command) => boolean;
   export type IgnoreCooldown = (message: Message, command: Command) => boolean;
   export type PrefixProvider = (ctx: Context) => string | string[] | Promise<string | string[]>;
@@ -2141,11 +1931,7 @@ declare module '@kyu/blade/api/stores/Command' {
     DM = "dm",
     DEVELOPER = "developer"
   }
-}
 
-declare module '@kyu/blade/api/components/Inhibitor' {
-  import { Component, ComponentOptions } from "@kyu/blade/api/components/Base";
-  import type { InhibitorStore } from "@kyu/blade/api/stores/Inhibitor";
   export type InhibitorType = "all" | "pre" | "post" | "command";
 
   export interface InhibitorOptions extends ComponentOptions {
@@ -2197,12 +1983,6 @@ declare module '@kyu/blade/api/components/Inhibitor' {
 
     run(...args: any[]): boolean | Promise<boolean>;
   }
-}
-
-declare module '@kyu/blade/api/components/Monitor' {
-  import { Component, ComponentOptions } from "@kyu/blade/api/components/Base";
-  import type { MonitorStore } from "@kyu/blade/api/stores/Monitor";
-  import type { Message } from "eris";
 
   export class Monitor extends Component {
     /**
@@ -2226,13 +2006,7 @@ declare module '@kyu/blade/api/components/Monitor' {
 
     _ran(message: Message): Promise<void>;
   }
-}
 
-declare module '@kyu/blade/api/components/Listener' {
-  import { Component, ComponentOptions } from "@kyu/blade/api/components/Base";
-  import type { ListenerStore } from "@kyu/blade/api/stores/Listener";
-  import type { EventEmitter } from "events";
-  import type { LiteEmitter } from "@kyu/blade";
   export type Emitter = EventEmitter | LiteEmitter;
   type Fn = (...args: any[]) => any;
   type Mode = "once" | "on";
@@ -2320,6 +2094,4 @@ declare module '@kyu/blade/api/components/Listener' {
     _unListen(): void;
   }
 
-  export {};
 }
-
