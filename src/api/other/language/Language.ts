@@ -3,8 +3,6 @@ import { Namespace } from "./Namespace";
 import { IllegalArgumentError } from "@ayanaware/errors";
 import { Util } from "../../../utils";
 import { basename } from "path";
-import { Schema } from "yaml/types";
-import Name = Schema.Name;
 
 export interface Metadata {
   author?: string | string[];
