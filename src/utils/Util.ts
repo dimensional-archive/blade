@@ -1,6 +1,12 @@
 import { lstatSync, readdirSync } from "fs";
 import { join } from "path";
 
+const disallowedKeys = [
+  '__proto__',
+  'prototype',
+  'constructor'
+];
+
 export abstract class Util {
   public static array<T>(v: T | T[]): T[] {
     return Array.isArray(v) ? v : [ v ];
@@ -14,6 +20,29 @@ export abstract class Util {
     return typeof input === 'function' &&
       typeof input.prototype === 'object' &&
       input.toString().substring(0, 5) === 'class';
+  }
+
+  public static isObject(value: any): boolean {
+    const type = typeof value;
+    return value !== null && (type === 'object' || type === 'function');
+  }
+
+  public static getPathSegments(path: string) {
+    const pathArray = path.split('.'),
+      parts: string[] = [];
+
+    for (let i = 0; i < pathArray.length; i++) {
+      let p = pathArray[i];
+
+      while (p[p.length - 1] === '\\' && pathArray[i + 1] !== undefined) {
+        p = p.slice(0, -1) + '.';
+        p += pathArray[++i];
+      }
+
+      parts.push(p);
+    }
+
+    return parts.some(segment => disallowedKeys.includes(segment)) ? [] : parts;
   }
 
   public static walk(directory: string, files: string[] = []): string[] {

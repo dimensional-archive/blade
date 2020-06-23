@@ -6,8 +6,7 @@
 //   ../@ayanaware/errors
 //   ../events
 
-import {
-  Permission,
+import type {
   Base,
   Client,
   ClientOptions,
@@ -21,6 +20,7 @@ import {
   MessageContent,
   MessageFile,
   OAuthApplicationInfo,
+  Permission,
   PrivateChannel,
   Role,
   TextableChannel,
@@ -28,12 +28,13 @@ import {
   User,
   VoiceChannel
 } from "eris";
-import { Logger } from "@ayanaware/logger";
-import { EventIterator, EventIteratorOptions } from '@klasa/event-iterator';
-import { GenericError } from "@ayanaware/errors";
+import type { Logger } from "@ayanaware/logger";
+import type { EventIterator, EventIteratorOptions } from '@klasa/event-iterator';
+import type { GenericError } from "@ayanaware/errors";
 import type { EventEmitter } from "events";
 
 declare module "@kyu/blade" {
+
   /**
    * A ratelimit class.
    * @since 1.0.0
@@ -926,6 +927,182 @@ declare module "@kyu/blade" {
     abstract update(id: string, value: any, path?: string): any | Promise<any>;
   }
 
+  export type Parser = (...args: any[]) => any;
+
+  export interface LanguageHelperOptions {
+    createDirectory?: boolean;
+    directory?: string;
+    parse?: Parser;
+  }
+
+  export class LanguageHelper extends LiteEmitter {
+    /**
+     * The client that is using this store.
+     * @since 1.0.5
+     */
+    readonly client: BladeClient;
+    /**
+     * All of the loaded languages.
+     * @since 1.0.5
+     */
+    readonly storage: Storage<string, Language>;
+    /**
+     * Whether to create the directory if none exists.
+     * @since 1.0.5
+     */
+    createDirectory: boolean;
+    /**
+     * The directory to load from.
+     * @since 1.0.5
+     */
+    directory: string;
+    /**
+     * The parser for metadata files.
+     * @since 1.0.5
+     */
+    parse: Parser;
+
+    /**
+     * @param client
+     * @param options
+     */
+    constructor(client: BladeClient, options?: LanguageHelperOptions);
+
+    /**
+     * Load all languages and their namespaces.
+     * @since 1.0.5
+     */
+    loadAll(): Promise<void>;
+
+    /**
+     * Loads a namespace.
+     * @param language The language that
+     * @param file
+     * @since 1.0.5
+     */
+    load(language: Language, file: string[]): Promise<void>;
+
+    /**
+     * Get a translation by it's path.
+     * @since 1.0.5
+     */
+    translate<T = string>(lang: string, path: string, data?: Record<string, any>): T;
+  }
+
+  export interface Metadata {
+    author?: string | string[];
+    alias?: string | string[];
+    id?: string;
+  }
+
+  export class Language {
+    /**
+     * The helper that loaded this language.
+     * @since 1.0.5
+     */
+    readonly helper: LanguageHelper;
+    /**
+     * The folder that belongs to this language.
+     * @since 1.0.5
+     */
+    readonly folder: string;
+    /**
+     * The different aliases for this language.
+     * @since 1.0.5
+     */
+    aliases: string[];
+    /**
+     * The author(s) that created this language.
+     * @since 1.0.5
+     */
+    authors: string[];
+    /**
+     * The id of this language.
+     * @since 1.0.5
+     */
+    id: string;
+
+    /**
+     * @param helper
+     * @param folder
+     * @param metadata
+     */
+    constructor(helper: LanguageHelper, folder: string, { id: _id, author, alias }?: Metadata);
+
+    /**
+     * Add a namespace to the map of namespaces.
+     * @param ns The namespace to set.
+     * @since 1.0.5
+     */
+    addNamespace(ns: Namespace): Map<string, Namespace>;
+
+    /**
+     * Get a namespace by it's name.
+     * @param ns The namespace to get.
+     * @since 1.0.5
+     */
+    getNamespace(ns: string): Namespace | undefined;
+
+    /**
+     * Get a translation.
+     * @param path The path to the translation.
+     * @param data Data to use.
+     */
+    translate(path: string, data?: Record<string, any>): any;
+  }
+
+  export class Namespace {
+    /**
+     * This namespaces logger.
+     * @since 1.0.5
+     */
+    readonly logger: Logger;
+    /**
+     * The blade client.
+     * @since 1.0.5
+     */
+    readonly client: BladeClient;
+    /**
+     * The language this namespace belongs to.
+     * @since 1.0.5
+     */
+    readonly language: Language;
+    /**
+     * The file array of this component.
+     * @since 1.0.0
+     */
+    file: string[];
+    /**
+     * The directory that holds this component.
+     * @since 1.0.0
+     */
+    directory: string;
+    /**
+     * THe name of this component
+     * @since 1.0.0
+     */
+    name: string;
+    /**
+     * Whether this component is disabled or not
+     * @since 1.0.0
+     */
+    disabled: boolean;
+
+    constructor(language: Language, file: string[], options?: Omit<ComponentOptions, "category">);
+
+    /**
+     * The namespace data getter.
+     */
+    get data(): Record<string, any>;
+
+    /**
+     * A typescript helper decorator.
+     * @param options The options to use when creating this listener.
+     * @constructor
+     */
+    static Setup(options: ComponentOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
+  }
+
   export type MessageIteratorOptions = EventIteratorOptions<[ Message ]>;
 
   /**
@@ -1290,6 +1467,10 @@ declare module "@kyu/blade" {
 
     static isClass(input: unknown): boolean;
 
+    static isObject(value: any): boolean;
+
+    static getPathSegments(path: string): string[];
+
     static walk(directory: string, files?: string[]): string[];
 
     static deepAssign<T>(o1: any, ...os: any[]): T;
@@ -1536,112 +1717,169 @@ declare module "@kyu/blade" {
     enable(): Promise<Component>;
   }
 
-  export type LoadFilter = (file: string) => boolean | Promise<boolean>;
-  export type ComponentResolvable<T> = string | T;
+  export type InhibitorType = "all" | "pre" | "post" | "command";
 
-  export interface ComponentStoreOptions {
-    classToHandle?: typeof Component;
+  export interface InhibitorOptions extends ComponentOptions {
+    /**
+     * The type of inhibitor.
+     * Can be 'all' to run on all messages, 'pre' to run on messages not blocked by the built-in inhibitors, or 'post' to run on messages that are commands, or 'command' to be ran on certain commands.
+     */
+    type?: InhibitorType;
+    /**
+     * Reason emitted when command or message is blocked.
+     * @default Inhibitor Name.
+     */
+    reason?: string;
+    /**
+     * Priority for the inhibitor for when more than one inhibitors block a message.
+     */
     priority?: number;
-    loadFilter?: LoadFilter;
-    autoCategory?: boolean;
-    defaults?: ComponentOptions;
-    createDirectory?: boolean;
-    directory?: string;
   }
 
   /**
-   * A component store.
+   * A message inhibitor.
    * @since 1.0.0
    */
-  export abstract class ComponentStore<T extends Component> extends LiteEmitter {
+  export class Inhibitor extends Component {
     /**
-     * The client that is using this store.
+     * The type of inhibitor.
      * @since 1.0.0
      */
-    readonly client: BladeClient;
+    type: InhibitorType;
     /**
-     * All of the loaded components.
+     * Reason emitted when command or message is blocked.
      * @since 1.0.0
      */
-    readonly components: Storage<string, T>;
+    reason: string;
     /**
-     * The name of this store.
-     * @since 1.0.0
-     */
-    name: string;
-    /**
-     * The priority this store has when being loaded.
+     * Priority for the inhibitor for when more than one inhibitors block a message.
      * @since 1.0.0
      */
     priority: number;
-    /**
-     * The class this store handles / loads.
-     * @since 1.0.0
-     */
-    classToHandle: typeof Component;
-    /**
-     * The load filter for this store.
-     * @since 1.0.0
-     */
-    loadFilter: LoadFilter;
-    /**
-     * Whether to create the directory if none exists.
-     * @since 1.0.0
-     */
-    createDirectory: boolean;
-    /**
-     * The directory to load from.
-     * @since 1.0.0
-     */
-    directory: string;
 
     /**
-     * Creates a new Component Store.
-     * @param client The client that's using this store.
-     * @param name The name of this store.
-     * @param options The options to give this store.
-     * @since 1.0.0
+     * Creates a new Inhibitor.
+     * @param store The store this inhibitor belongs to
+     * @param dir The directory this inhibitor is in.
+     * @param path The file path this inhibitor.
+     * @param options The options to give this inhibitor.
      */
-    protected constructor(client: BladeClient, name: string, options?: ComponentStoreOptions);
+    constructor(store: InhibitorStore, dir: string, path: string[], options?: InhibitorOptions);
 
-    static walkDir(store: ComponentStore<Component>, dir: string): Promise<Component>[];
-
-    load(directory: string, file: string[]): Promise<T>;
-
-    /**
-     * Loads all files in the given directory.
-     * @since 1.0.0
-     * @returns {number} Total components loaded.
-     */
-    loadAll(): Promise<number>;
-
-    /**
-     * Resolves a string or component into... a component.
-     * @param resolvable
-     * @returns {Component} The resolved component.
-     */
-    resolve(resolvable: ComponentResolvable<T>): T | undefined;
-
-    /**
-     * Removes a component from the store.
-     * @param resolvable The component to remove.
-     * @since 1.0.0
-     */
-    remove(resolvable: ComponentResolvable<T>): T | null;
-
-    /**
-     * Adds a component to the store.
-     * @param component
-     * @since 1.0.0
-     */
-    add(component: T): T | null;
-
-    /**
-     * Returns the string representation of this store.
-     * @since 1.0.0
-     */
-    toString(): string;
+    run(...args: any[]): boolean | Promise<boolean>;
   }
+
+  export class Monitor extends Component {
+    /**
+     * The monitor store that stores this component.
+     * @since 1.0.0
+     */
+    readonly store: MonitorStore;
+
+    /**
+     * A typescript helper decorator.
+     * @param options The options to use when creating this listener.
+     * @constructor
+     */
+    static Setup(options: ComponentOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
+
+    /**
+     * Runs this monitor
+     * @param message
+     */
+    run(message: Message): Promise<void>;
+
+    _ran(message: Message): Promise<void>;
+  }
+
+  export type Emitter = EventEmitter | LiteEmitter;
+  type Fn = (...args: any[]) => any;
+  type Mode = "once" | "on";
+  type Mappings = Record<string, Fn | string | ListenerMapping>;
+
+  export interface ListenerOptions extends ComponentOptions {
+    /**
+     * The event to listen for.
+     */
+    event: string | string[];
+    /**
+     * The emitter to attach the listener to.
+     */
+    emitter?: string | Emitter;
+    /**
+     * Event mappings for use with multiple events.
+     */
+    mappings?: Record<string, ListenerMapping>;
+    /**
+     * The listener mode.
+     */
+    mode?: Mode;
+  }
+
+  export interface ListenerMapping {
+    event: string;
+    fn?: (...args: any) => any;
+    emitter?: string | Emitter;
+    mode?: Mode;
+  }
+
+  /**
+   * An abstract class for adding a listener to an emitter.
+   * @since 1.0.0
+   * @extends Component
+   */
+  export class Listener extends Component {
+    /**
+     * The store this listener belongs to.
+     */
+    readonly store: ListenerStore;
+    /**
+     * The event or events to listen for.
+     */
+    event: string | string[];
+    /**
+     * The emitter to attach the listener to
+     * @since 1.0.0
+     */
+    emitter: Emitter;
+    /**
+     * Event mappings for use with multiple events.
+     * @since 1.0.0
+     */
+    mappings: Mappings;
+    /**
+     * The mode of the listener, "on" | "off" | "once"
+     * @since 1.0.0
+     */
+    mode: Mode;
+
+    constructor(store: ListenerStore, dir: string, file: string[], options: ListenerOptions);
+
+    /**
+     * A typescript helper decorator.
+     * @param options The options to use when creating this listener.
+     * @constructor
+     */
+    static Setup(options: ListenerOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
+
+    run(...args: any[]): any | Promise<any>;
+
+    /**
+     * Attaches the proper listener to the emitter
+     * @since 1.0.0
+     * @private
+     */
+    _listen(this: Listener): void;
+
+    /**
+     * Removes the listener from the emitter
+     * @since 0.0.0-alpha
+     * @private
+     */
+    _unListen(): void;
+  }
+
+  export {};
 
   export class InhibitorStore extends ComponentStore<Inhibitor> {
     constructor(client: BladeClient, options?: ComponentStoreOptions);
@@ -1932,166 +2170,110 @@ declare module "@kyu/blade" {
     DEVELOPER = "developer"
   }
 
-  export type InhibitorType = "all" | "pre" | "post" | "command";
+  export type LoadFilter = (file: string) => boolean | Promise<boolean>;
+  export type ComponentResolvable<T> = string | T;
 
-  export interface InhibitorOptions extends ComponentOptions {
-    /**
-     * The type of inhibitor.
-     * Can be 'all' to run on all messages, 'pre' to run on messages not blocked by the built-in inhibitors, or 'post' to run on messages that are commands, or 'command' to be ran on certain commands.
-     */
-    type?: InhibitorType;
-    /**
-     * Reason emitted when command or message is blocked.
-     * @default Inhibitor Name.
-     */
-    reason?: string;
-    /**
-     * Priority for the inhibitor for when more than one inhibitors block a message.
-     */
+  export interface ComponentStoreOptions {
+    classToHandle?: typeof Component;
     priority?: number;
+    loadFilter?: LoadFilter;
+    autoCategory?: boolean;
+    defaults?: ComponentOptions;
+    createDirectory?: boolean;
+    directory?: string;
   }
 
   /**
-   * A message inhibitor.
+   * A component store.
    * @since 1.0.0
    */
-  export class Inhibitor extends Component {
+  export abstract class ComponentStore<T extends Component> extends LiteEmitter {
     /**
-     * The type of inhibitor.
+     * The client that is using this store.
      * @since 1.0.0
      */
-    type: InhibitorType;
+    readonly client: BladeClient;
     /**
-     * Reason emitted when command or message is blocked.
+     * All of the loaded components.
      * @since 1.0.0
      */
-    reason: string;
+    readonly components: Storage<string, T>;
     /**
-     * Priority for the inhibitor for when more than one inhibitors block a message.
+     * The name of this store.
+     * @since 1.0.0
+     */
+    name: string;
+    /**
+     * The priority this store has when being loaded.
      * @since 1.0.0
      */
     priority: number;
-
     /**
-     * Creates a new Inhibitor.
-     * @param store The store this inhibitor belongs to
-     * @param dir The directory this inhibitor is in.
-     * @param path The file path this inhibitor.
-     * @param options The options to give this inhibitor.
-     */
-    constructor(store: InhibitorStore, dir: string, path: string[], options?: InhibitorOptions);
-
-    run(...args: any[]): boolean | Promise<boolean>;
-  }
-
-  export class Monitor extends Component {
-    /**
-     * The monitor store that stores this component.
+     * The class this store handles / loads.
      * @since 1.0.0
      */
-    readonly store: MonitorStore;
-
+    classToHandle: typeof Component;
     /**
-     * A typescript helper decorator.
-     * @param options The options to use when creating this listener.
-     * @constructor
-     */
-    static Setup(options: ComponentOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
-
-    /**
-     * Runs this monitor
-     * @param message
-     */
-    run(message: Message): Promise<void>;
-
-    _ran(message: Message): Promise<void>;
-  }
-
-  export type Emitter = EventEmitter | LiteEmitter;
-  type Fn = (...args: any[]) => any;
-  type Mode = "once" | "on";
-  type Mappings = Record<string, Fn | string | ListenerMapping>;
-
-  export interface ListenerOptions extends ComponentOptions {
-    /**
-     * The event to listen for.
-     */
-    event: string | string[];
-    /**
-     * The emitter to attach the listener to.
-     */
-    emitter?: string | Emitter;
-    /**
-     * Event mappings for use with multiple events.
-     */
-    mappings?: Record<string, ListenerMapping>;
-    /**
-     * The listener mode.
-     */
-    mode?: Mode;
-  }
-
-  export interface ListenerMapping {
-    event: string;
-    fn?: (...args: any) => any;
-    emitter?: string | Emitter;
-    mode?: Mode;
-  }
-
-  /**
-   * An abstract class for adding a listener to an emitter.
-   * @since 1.0.0
-   * @extends Component
-   */
-  export class Listener extends Component {
-    /**
-     * The store this listener belongs to.
-     */
-    readonly store: ListenerStore;
-    /**
-     * The event or events to listen for.
-     */
-    event: string | string[];
-    /**
-     * The emitter to attach the listener to
+     * The load filter for this store.
      * @since 1.0.0
      */
-    emitter: Emitter;
+    loadFilter: LoadFilter;
     /**
-     * Event mappings for use with multiple events.
+     * Whether to create the directory if none exists.
      * @since 1.0.0
      */
-    mappings: Mappings;
+    createDirectory: boolean;
     /**
-     * The mode of the listener, "on" | "off" | "once"
+     * The directory to load from.
      * @since 1.0.0
      */
-    mode: Mode;
-
-    constructor(store: ListenerStore, dir: string, file: string[], options: ListenerOptions);
+    directory: string;
 
     /**
-     * A typescript helper decorator.
-     * @param options The options to use when creating this listener.
-     * @constructor
-     */
-    static Setup(options: ListenerOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
-
-    run(...args: any[]): any | Promise<any>;
-
-    /**
-     * Attaches the proper listener to the emitter
+     * Creates a new Component Store.
+     * @param client The client that's using this store.
+     * @param name The name of this store.
+     * @param options The options to give this store.
      * @since 1.0.0
-     * @private
      */
-    _listen(this: Listener): void;
+    protected constructor(client: BladeClient, name: string, options?: ComponentStoreOptions);
+
+    static walkDir(store: ComponentStore<Component>, dir: string): Promise<Component>[];
+
+    load(directory: string, file: string[]): Promise<T>;
 
     /**
-     * Removes the listener from the emitter
-     * @since 0.0.0-alpha
-     * @private
+     * Loads all files in the given directory.
+     * @since 1.0.0
+     * @returns {number} Total components loaded.
      */
-    _unListen(): void;
+    loadAll(): Promise<number>;
+
+    /**
+     * Resolves a string or component into... a component.
+     * @param resolvable
+     * @returns {Component} The resolved component.
+     */
+    resolve(resolvable: ComponentResolvable<T>): T | undefined;
+
+    /**
+     * Removes a component from the store.
+     * @param resolvable The component to remove.
+     * @since 1.0.0
+     */
+    remove(resolvable: ComponentResolvable<T>): T | null;
+
+    /**
+     * Adds a component to the store.
+     * @param component
+     * @since 1.0.0
+     */
+    add(component: T): T | null;
+
+    /**
+     * Returns the string representation of this store.
+     * @since 1.0.0
+     */
+    toString(): string;
   }
-
 }

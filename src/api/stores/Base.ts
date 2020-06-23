@@ -6,6 +6,7 @@ import { Component, ComponentOptions } from "../components/Base";
 import { Storage } from "../../utils/Storage";
 
 import type { BladeClient } from "../Client";
+import { mkdir } from "fs";
 
 export type LoadFilter = (file: string) => boolean | Promise<boolean>;
 export type ComponentResolvable<T> = string | T;
@@ -99,7 +100,18 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
   }
 
   public static walkDir(store: ComponentStore<Component>, dir: string): Promise<Component>[] {
-    const files = Util.walk(dir);
+    let files: string[] = [];
+    try {
+      files = Util.walk(dir);
+    } catch (e) {
+      if (store.createDirectory) {
+        mkdir(dir, () => {
+          files = Util.walk(dir);
+        });
+      }
+    }
+
+
     return files.map(file => store.load(dir, relative(dir, file).split(sep)));
   }
 
