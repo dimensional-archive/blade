@@ -1,5 +1,15 @@
 import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "./Base";
-import { Context, ContextData, InhibitorStore, ListenerStore, MonitorStore, Storage, TypeResolver, Util } from "../..";
+import {
+  Context,
+  ContextData,
+  InhibitorStore,
+  Language,
+  ListenerStore,
+  MonitorStore,
+  Storage,
+  TypeResolver,
+  Util
+} from "../..";
 import Permissions from "../../utils/Permissions";
 
 import type { BladeClient } from "../Client";
@@ -11,8 +21,16 @@ import { IllegalStateError } from "@ayanaware/errors";
 export type IgnorePermissions = (message: Message, command: Command) => boolean;
 export type IgnoreCooldown = (message: Message, command: Command) => boolean;
 export type PrefixProvider = (ctx: Context) => string | string[] | Promise<string | string[]>;
+export type LanguageGetter = (ctx: Context) => string | Language;
 
 export interface HandlingOptions {
+  /**
+   * A method used for getting a language.
+   */
+  getLanguage?: LanguageGetter;
+  /**
+   * The prefixes to use.
+   */
   prefix?: string | string[] | PrefixProvider;
   /**
    * Whether to handle command edits.
@@ -141,6 +159,7 @@ export class CommandStore extends ComponentStore<Command> {
       handleEdits: true,
       sendTyping: true,
       prefix: [ "!" ],
+      getLanguage: () => "en-US",
       argumentDefaults: {
         prompt: {
           start: "",

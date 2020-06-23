@@ -112,9 +112,14 @@ export class Language {
     if (!path.match(regExp))
       throw new IllegalArgumentError(`Path doesn't follow this format: "namespace:path"`);
 
-    const [ , n, p ] = regExp.exec(path)!,
-      namespace = this.getNamespace(n);
-    if (!namespace || !namespace.data) return `Incorrect or missing namespace: ${n}`;
+    const [ , n, p ] = regExp.exec(path)!;
+
+    let namespace = this.getNamespace(n);
+    if (!namespace || !namespace.data) {
+      const en = this.helper.storage.get(this.helper.fallbackLang);
+      namespace = en!.getNamespace(n);
+      if (!namespace) return `Incorrect or missing namespace: "${n}"`;
+    }
 
     let value = Language.get(namespace.data, p);
     if (!value) return `Incorrect or missing path: "${p}"`;

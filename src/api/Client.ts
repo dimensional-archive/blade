@@ -4,7 +4,7 @@ import { Component } from "./components/Base";
 import { IllegalStateError } from "@ayanaware/errors";
 import { dirname } from "path";
 import { ClientUtil } from "../utils/ClientUtil";
-import { CommandStore, Storage } from "..";
+import { CommandStore, LanguageHelper, LanguageHelperOptions, Storage } from "..";
 import Permissions from "../utils/Permissions";
 import { Logger } from "@ayanaware/logger";
 
@@ -12,6 +12,7 @@ export interface BladeClientOptions extends ClientOptions {
   directory?: string;
   token: string;
   owners?: string | string[];
+  language?: LanguageHelperOptions;
 }
 
 /**
@@ -21,6 +22,11 @@ export interface BladeClientOptions extends ClientOptions {
  */
 export class BladeClient extends Client {
   public static basePermissions = [ Constants.Permissions.sendMessages, Constants.Permissions.readMessages ];
+  /**
+   * This client's language helper.
+   * @since 1.0.5
+   */
+  public readonly languages: LanguageHelper;
   /**
    * This client's logger.
    * @since 1.0.4
@@ -50,6 +56,9 @@ export class BladeClient extends Client {
    * A set of owners.
    */
   public owners: Set<User> = new Set();
+  /**
+   * The options that were given to this client.
+   */
   public options!: BladeClientOptions;
   /**
    * A set of stores that are being used by the client.
@@ -64,6 +73,7 @@ export class BladeClient extends Client {
   public constructor(options: BladeClientOptions) {
     super(options.token, options);
 
+    this.languages = new LanguageHelper(this, options.language);
     this.logger = Logger.custom("blade", "@kyu", "");
     this.util = new ClientUtil()
     this.directory = options.directory ?? dirname(require.main!.filename);
@@ -106,6 +116,7 @@ export class BladeClient extends Client {
       for (const id of (this.options.owners ?? [])) this.owners.add(this.users.get(id)!);
     });
 
+    await this.languages.loadAll();
     await Promise.all(this._stores.map(r => r.loadAll()));
 
     try {

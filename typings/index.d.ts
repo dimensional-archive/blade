@@ -34,7 +34,6 @@ import type { GenericError } from "@ayanaware/errors";
 import type { EventEmitter } from "events";
 
 declare module "@kyu/blade" {
-
   /**
    * A ratelimit class.
    * @since 1.0.0
@@ -562,6 +561,14 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     setEditable(state: boolean): this;
+
+    /**
+     * Get a translation string.
+     * @param path The translation to get.
+     * @param data
+     * @since 1.0.5
+     */
+    t<T = string>(path: string, data?: Record<string, any>): T;
   }
 
   export class ReplyBuilder {
@@ -589,24 +596,26 @@ declare module "@kyu/blade" {
   export type Before = (ctx: Context) => boolean | Promise<boolean>;
   export type KeySupplier = (ctx: Context, args?: any) => string;
   export type ExecutionPredicate = (ctx: Context) => boolean;
+  export type TFunction<T = string> = (path: string, data: Record<string, any>) => T;
+  export type GetTranslation<T = string> = (t: TFunction<T>) => T;
 
   export interface CommandDescription {
     /**
      * The description content.
      */
-    content?: string;
+    content?: string | GetTranslation;
     /**
      * Extended help for this command.
      */
-    extendedContent?: string;
+    extendedContent?: string | GetTranslation;
     /**
      * How to use this command.
      */
-    usage?: string;
+    usage?: string | GetTranslation;
     /**
      * Examples of this command.
      */
-    examples?: string[];
+    examples?: string[] | GetTranslation;
   }
 
   export interface CommandOptions extends ComponentOptions {
@@ -617,7 +626,7 @@ declare module "@kyu/blade" {
     /**
      * Description of the command.
      */
-    description?: CommandDescription;
+    description?: CommandDescription | GetTranslation<CommandDescription>;
     /**
      * The command arguments.
      */
@@ -690,12 +699,15 @@ declare module "@kyu/blade" {
      * A method called before this command gets ran.
      */
     before?: Before;
+    /**
+     * A condition that allows this command to run.
+     */
+    condition?: ExecutionPredicate;
     flags?: string[];
     optionFlags?: string[];
     quoted?: boolean;
     separator?: string;
     lock?: "guild" | "channel" | "user" | KeySupplier;
-    condition?: ExecutionPredicate;
   }
 
   /**
@@ -703,12 +715,12 @@ declare module "@kyu/blade" {
    * @since 1.0.0
    */
   export class Command extends Component {
+    readonly locker: Set<KeySupplier>;
     /**
      * The command store.
      * @since 1.0.0
      */
     readonly store: CommandStore;
-    readonly locker: Set<KeySupplier>;
     /**
      * The aliases for this command.
      */
@@ -717,7 +729,7 @@ declare module "@kyu/blade" {
      * This commands description.
      * @since 1.0.0
      */
-    description: CommandDescription;
+    description: CommandDescription | GetTranslation<CommandDescription>;
     /**
      * Restrictions for this command.
      * @since 1.0.0
@@ -847,6 +859,7 @@ declare module "@kyu/blade" {
     directory?: string;
     token: string;
     owners?: string | string[];
+    language?: LanguageHelperOptions;
   }
 
   /**
@@ -856,6 +869,11 @@ declare module "@kyu/blade" {
    */
   export class BladeClient extends Client {
     static basePermissions: (2048 | 1024)[];
+    /**
+     * This client's language helper.
+     * @since 1.0.5
+     */
+    readonly languages: LanguageHelper;
     /**
      * This client's logger.
      * @since 1.0.4
@@ -885,6 +903,9 @@ declare module "@kyu/blade" {
      * A set of owners.
      */
     owners: Set<User>;
+    /**
+     * The options that were given to this client.
+     */
     options: BladeClientOptions;
 
     /**
@@ -933,6 +954,7 @@ declare module "@kyu/blade" {
     createDirectory?: boolean;
     directory?: string;
     parse?: Parser;
+    fallbackLang?: string;
   }
 
   export class LanguageHelper extends LiteEmitter {
@@ -946,6 +968,11 @@ declare module "@kyu/blade" {
      * @since 1.0.5
      */
     readonly storage: Storage<string, Language>;
+    /**
+     * The fallback language in case a language isn't found or a namespace isn't found.
+     * @since 1.0.5
+     */
+    fallbackLang: string;
     /**
      * Whether to create the directory if none exists.
      * @since 1.0.5
@@ -1421,7 +1448,7 @@ declare module "@kyu/blade" {
    * Contains utility functions to help with permission checking and hierarchy.
    * @since 1.0.0
    */
-  export default class Permissions {
+  export class Permissions {
     /**
      * Returns the highest role the member has
      * undefined if the member doesn't have a role
@@ -1950,8 +1977,16 @@ declare module "@kyu/blade" {
   export type IgnorePermissions = (message: Message, command: Command) => boolean;
   export type IgnoreCooldown = (message: Message, command: Command) => boolean;
   export type PrefixProvider = (ctx: Context) => string | string[] | Promise<string | string[]>;
+  export type LanguageGetter = (ctx: Context) => string | Language;
 
   export interface HandlingOptions {
+    /**
+     * A method used for getting a language.
+     */
+    getLanguage?: LanguageGetter;
+    /**
+     * The prefixes to use.
+     */
     prefix?: string | string[] | PrefixProvider;
     /**
      * Whether to handle command edits.
@@ -2276,4 +2311,5 @@ declare module "@kyu/blade" {
      */
     toString(): string;
   }
+
 }

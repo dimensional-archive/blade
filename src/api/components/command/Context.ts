@@ -190,4 +190,17 @@ export class Context {
     this.shouldEdit = Boolean(state);
     return this;
   }
+
+  /**
+   * Get a translation string.
+   * @param path The translation to get.
+   * @param data
+   * @since 1.0.5
+   */
+  public t<T = string>(path: string, data: Record<string, any> = {}): T {
+    const lang = this.store.handling.getLanguage!(this);
+    return typeof lang !== "string"
+      ? lang.translate(path, data)
+      : this.client.languages.translate(lang, path, data);
+  }
 }

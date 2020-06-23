@@ -45,6 +45,16 @@
   resolved "https://registry.yarnpkg.com/@klasa/timer-manager/-/timer-manager-0.0.1.tgz#977903d92453e9602c1803af15f1713d5ca028b9"
   integrity sha512-1ElnhLXzqv4Iod/GS7+joZX71rhSxHBVDoTX8gnXF55BKXihv/p5tF3ddfx7Rn0kzUSQwJwJkyMO6QyaXMcB6A==
 
+"@kyu/blade@kyudiscord/blade":
+  version "1.0.4"
+  resolved "https://codeload.github.com/kyudiscord/blade/tar.gz/42d8a09d11df1e23cf7ca40d54ec77c1b3722e12"
+  dependencies:
+    "@ayanaware/errors" "^1.1.0"
+    "@ayanaware/logger" "^2.2.1"
+    "@klasa/event-iterator" "^0.0.10"
+    "@klasa/timer-manager" "^0.0.1"
+    eris "^0.13.1"
+
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"

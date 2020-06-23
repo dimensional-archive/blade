@@ -11,6 +11,7 @@ export interface LanguageHelperOptions {
   createDirectory?: boolean;
   directory?: string;
   parse?: Parser;
+  fallbackLang?: string
 }
 
 export class LanguageHelper extends LiteEmitter {
@@ -25,6 +26,11 @@ export class LanguageHelper extends LiteEmitter {
    */
   public readonly storage: Storage<string, Language>;
 
+  /**
+   * The fallback language in case a language isn't found or a namespace isn't found.
+   * @since 1.0.5
+   */
+  public fallbackLang: string;
   /**
    * Whether to create the directory if none exists.
    * @since 1.0.5
@@ -51,6 +57,7 @@ export class LanguageHelper extends LiteEmitter {
     this.client = client;
     this.storage = new Storage();
 
+    this.fallbackLang = options.fallbackLang ?? "en-US";
     this.createDirectory = options.createDirectory ?? true;
     this.directory = options.directory ?? join(client.directory, "locales");
     this.parse = options.parse ?? JSON.parse;
@@ -119,8 +126,12 @@ export class LanguageHelper extends LiteEmitter {
    * @since 1.0.5
    */
   public translate<T = string>(lang: string, path: string, data: Record<string, any> = {}): T {
-    const language = this.storage.get(lang);
-    if (!language) throw new IllegalArgumentError(`Language ${lang} does not exist.`);
+    let language = this.storage.get(lang);
+    if (!language) {
+      language = this.storage.get(this.fallbackLang);
+      if (!language) throw new IllegalArgumentError(`Language ${lang} does not exist.`)
+    }
+
     return language.translate(path, data);
   }
 }

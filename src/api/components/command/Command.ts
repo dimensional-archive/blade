@@ -16,23 +16,26 @@ export type Before = (ctx: Context) => boolean | Promise<boolean>;
 export type KeySupplier = (ctx: Context, args?: any) => string;
 export type ExecutionPredicate = (ctx: Context) => boolean;
 
+export type TFunction<T = string> = (path: string, data: Record<string, any>) => T;
+export type GetTranslation<T = string> = (t: TFunction<T>) => T;
+
 export interface CommandDescription {
   /**
    * The description content.
    */
-  content?: string;
+  content?: string | GetTranslation;
   /**
    * Extended help for this command.
    */
-  extendedContent?: string;
+  extendedContent?: string | GetTranslation;
   /**
    * How to use this command.
    */
-  usage?: string;
+  usage?: string | GetTranslation;
   /**
    * Examples of this command.
    */
-  examples?: string[];
+  examples?: string[] | GetTranslation;
 }
 
 export interface CommandOptions extends ComponentOptions {
@@ -43,7 +46,7 @@ export interface CommandOptions extends ComponentOptions {
   /**
    * Description of the command.
    */
-  description?: CommandDescription;
+  description?: CommandDescription | GetTranslation<CommandDescription>;
   /**
    * The command arguments.
    */
@@ -116,12 +119,15 @@ export interface CommandOptions extends ComponentOptions {
    * A method called before this command gets ran.
    */
   before?: Before;
+  /**
+   * A condition that allows this command to run.
+   */
+  condition?: ExecutionPredicate;
   flags?: string[];
   optionFlags?: string[];
   quoted?: boolean;
   separator?: string;
   lock?: "guild" | "channel" | "user" | KeySupplier;
-  condition?: ExecutionPredicate;
 }
 
 /**
@@ -129,12 +135,12 @@ export interface CommandOptions extends ComponentOptions {
  * @since 1.0.0
  */
 export class Command extends Component {
+  public readonly locker: Set<KeySupplier> = new Set();
   /**
    * The command store.
    * @since 1.0.0
    */
   public readonly store!: CommandStore;
-  public readonly locker: Set<KeySupplier> = new Set();
   /**
    * The aliases for this command.
    */
@@ -143,7 +149,7 @@ export class Command extends Component {
    * This commands description.
    * @since 1.0.0
    */
-  public description: CommandDescription;
+  public description: CommandDescription | GetTranslation<CommandDescription>;
   /**
    * Restrictions for this command.
    * @since 1.0.0
@@ -258,8 +264,7 @@ export class Command extends Component {
       : options.args!.bind(this);
 
     this.argumentDefaults = options.argumentDefaults ?? {}
-    this.aliases = [...(options.aliases ?? []), this.name];
-    this.description = options.description ?? {}
+    this.aliases = [ ...(options.aliases ?? []), this.name ];
     this.editable = options.editable ?? true;
     this.bucket = options.bucket ?? 1;
     this.cooldown = options.cooldown ?? 5000;
@@ -284,6 +289,11 @@ export class Command extends Component {
     this.before = options.before
       ? options.before.bind(this)
       : () => true;
+    this.description = options.description
+      ? typeof options.description === "function"
+        ? options.description.bind(this)
+        : options.description
+      : { content: "", usage: "" }
     this.prefix = options.prefixes
       ? typeof options.prefixes === "function"
         ? options.prefixes.bind(this)
