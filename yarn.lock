@@ -46,13 +46,14 @@
   integrity sha512-1ElnhLXzqv4Iod/GS7+joZX71rhSxHBVDoTX8gnXF55BKXihv/p5tF3ddfx7Rn0kzUSQwJwJkyMO6QyaXMcB6A==
 
 "@kyu/blade@kyudiscord/blade":
-  version "1.0.4"
-  resolved "https://codeload.github.com/kyudiscord/blade/tar.gz/42d8a09d11df1e23cf7ca40d54ec77c1b3722e12"
+  version "1.0.5"
+  resolved "https://codeload.github.com/kyudiscord/blade/tar.gz/ebdda7facf0d10db5b05495c73f180ab85c240e3"
   dependencies:
     "@ayanaware/errors" "^1.1.0"
     "@ayanaware/logger" "^2.2.1"
     "@klasa/event-iterator" "^0.0.10"
     "@klasa/timer-manager" "^0.0.1"
+    "@kyu/blade" kyudiscord/blade
     eris "^0.13.1"
 
 "@types/color-name@^1.1.1":

@@ -596,7 +596,7 @@ declare module "@kyu/blade" {
   export type Before = (ctx: Context) => boolean | Promise<boolean>;
   export type KeySupplier = (ctx: Context, args?: any) => string;
   export type ExecutionPredicate = (ctx: Context) => boolean;
-  export type TFunction<T = string> = (path: string, data: Record<string, any>) => T;
+  export type TFunction<T = string> = (path: string, data?: Record<string, any>) => T;
   export type GetTranslation<T = string> = (t: TFunction<T>) => T;
 
   export interface CommandDescription {
