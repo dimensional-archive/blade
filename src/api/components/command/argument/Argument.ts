@@ -11,14 +11,15 @@ import type {
   FailureData,
   Modifier,
   ParsedValuePredicate,
-  Supplier
+  Supplier,
 } from "./Types";
 import { ArgumentMatches, ArgumentTypes } from "../../../../utils/Constants";
 import type { BladeClient } from "../../../Client";
-import { CommandStore, EmbedBuilder, ReplyBuilder, Util } from "../../../..";
+import { CommandStore, EmbedBuilder, Util } from "../../../..";
 import { Flag } from "./Flag";
 
 import type { Message, MessageContent } from "eris";
+import { Components } from "../../../Components";
 
 export class Argument {
   public match: ArgumentMatch;
@@ -197,8 +198,8 @@ export class Argument {
           : x.length != null
           ? x.length
           : x.size != null
-            ? x.size
-            : x;
+          ? x.size
+          : x;
 
       return o >= min && (inclusive ? o <= max : o < max);
     });
@@ -337,14 +338,10 @@ export class Argument {
         handlerDefs.modifyOtherwise
       );
 
-      let text = await Util.intoCallable(otherwise).call(
-        this,
-        message.ctx,
-        {
-          phrase,
-          failure,
-        }
-      );
+      let text = await Util.intoCallable(otherwise).call(this, message.ctx, {
+        phrase,
+        failure,
+      });
       if (Array.isArray(text)) {
         text = text.join("\n");
       }
@@ -352,8 +349,7 @@ export class Argument {
       if (modifyOtherwise) {
         text = await modifyOtherwise.call(this, message.ctx, text, {
           phrase,
-          // @ts-ignore
-          failure,
+          failure: failure as any,
         });
         if (Array.isArray(text)) {
           text = text.join("\n");
@@ -392,9 +388,9 @@ export class Argument {
       return this.default == null
         ? res
         : Util.intoCallable(this.default)(message.ctx, {
-          phrase,
-          failure: res,
-        });
+            phrase,
+            failure: res,
+          });
     }
 
     return res;
@@ -410,7 +406,10 @@ export class Argument {
     parsedInput: any = null
   ): Promise<Flag | any> {
     const promptOptions: ArgumentPromptOptions = {};
-    Object.assign(promptOptions, this.handler.handling.argumentDefaults!.prompt);
+    Object.assign(
+      promptOptions,
+      this.handler.handling.argumentDefaults!.prompt
+    );
     Object.assign(promptOptions, this.command.argumentDefaults.prompt);
     Object.assign(promptOptions, this.prompt || {});
 
@@ -428,20 +427,20 @@ export class Argument {
       inputPhrase: string,
       inputParsed: any
     ): Promise<MessageContent> => {
-      let text = await Util.intoCallable(prompter).call(
-        this,
-        message.ctx,
-        {
-          retries: retryCount,
-          infinite: isInfinite,
-          message: inputMessage,
-          phrase: inputPhrase,
-          failure: inputParsed,
-        }
-      );
+      let text = await Util.intoCallable(prompter).call(this, message.ctx, {
+        retries: retryCount,
+        infinite: isInfinite,
+        message: inputMessage,
+        phrase: inputPhrase,
+        failure: inputParsed,
+      });
 
-      if (text instanceof EmbedBuilder) text = { embed: text.build() }
-      if (Util.isFunction(text)) text = (await text.call(this, new ReplyBuilder(message.ctx), message.ctx)).build()[0];
+      const Builder = Components.get("replyBuilder");
+      if (text instanceof EmbedBuilder) text = { embed: text.build() };
+      if (Util.isFunction(text))
+        text = (
+          await text.call(this, new Builder(message.ctx), message.ctx)
+        ).build()[0];
       if (Array.isArray(text)) text = text.join("\n");
 
       const modifier: Modifier<ArgumentPromptData, Content> = ({
@@ -504,11 +503,11 @@ export class Argument {
 
       let input;
       try {
-        input = (await this.client!.util.awaitMessages(message.channel, {
+        input = await this.client!.util.awaitMessages(message.channel, {
           limit: 1,
           idle: promptOptions.time,
-          filter: ([ m ]) => m.author.id === message.author.id,
-        }).then((c) => c.first![1]));
+          filter: ([m]) => m.author.id === message.author.id,
+        }).then((c) => c.first![1]);
 
         message.ctx.addMessage(input);
       } catch (err) {

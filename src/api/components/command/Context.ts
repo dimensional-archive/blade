@@ -6,6 +6,7 @@ import type { Command } from "./Command";
 import type { BladeClient } from "../../Client";
 import type { CommandStore } from "../../..";
 import { EmbedBuilder } from "../../..";
+import { Components } from "../../Components";
 
 export type Content =
   MessageContent
@@ -96,10 +97,12 @@ export class Context {
   ): Promise<MessageContent> {
     let transformedOptions: MessageContent;
 
+    const Builder = Components.get("replyBuilder");
     if (typeof message === "function") {
-      const builder = await message(new ReplyBuilder(context), context);
+      const builder = await message(new Builder(context), context);
       transformedOptions = (await builder.build())[0];
-    } else if (message instanceof EmbedBuilder) transformedOptions = { embed: message.build() }
+    } else if (message instanceof EmbedBuilder) 
+      transformedOptions = { embed: message.build()! }!
     else transformedOptions = message;
 
     return transformedOptions

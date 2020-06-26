@@ -45,7 +45,7 @@ const PermissionNames = {
  * Contains utility functions to help with permission checking and hierarchy.
  * @since 1.0.0
  */
-export default class Permissions {
+export class Permissions {
   /**
    * Returns the highest role the member has
    * undefined if the member doesn't have a role

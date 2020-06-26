@@ -1,11 +1,10 @@
 import { Client, ClientOptions, Constants, Member, OAuthApplicationInfo, Permission, User } from "eris";
 import { ComponentStore } from "./stores/Base";
 import { Component } from "./components/Base";
-import { IllegalStateError } from "@ayanaware/errors";
 import { dirname } from "path";
 import { ClientUtil } from "../utils/ClientUtil";
 import { CommandStore, LanguageHelper, LanguageHelperOptions, Storage } from "..";
-import Permissions from "../utils/Permissions";
+import { Permissions } from "../utils/Permissions";
 import { Logger } from "@ayanaware/logger";
 
 export interface BladeClientOptions extends ClientOptions {
@@ -64,7 +63,7 @@ export class BladeClient extends Client {
    * A set of stores that are being used by the client.
    * @since 1.0.0
    */
-  private readonly _stores: Storage<string, ComponentStore<Component>> = new Storage();
+  public readonly stores: Storage<string, ComponentStore<Component>> = new Storage();
 
   /**
    * Creates a new BladeClient.
@@ -81,27 +80,11 @@ export class BladeClient extends Client {
   }
 
   public get invite(): string | null {
-    const commands = this._stores.get("commands") as CommandStore;
+    const commands = this.stores.get("commands") as CommandStore;
     if (!this.app || !commands) return null;
 
     const permissions = new Permission(Permissions.add(...BladeClient.basePermissions, ...commands.components.map(c => c.permissionsBytecode)), 0);
     return `https://discordapp.com/oauth2/authorize?client_id=${this.app.id}&permissions=${permissions.allow}&scope=bot`;
-  }
-
-  /**
-   * Uses a store.
-   * @param store The store to use.
-   */
-  public use(store: ComponentStore<Component>): this {
-    if (this._stores.has(store.name)) {
-      throw new IllegalStateError(`Store "${store.name ?? store.constructor.name}" is already being used.`);
-    }
-
-    this._stores.set(store.name, store);
-    Object.defineProperty(this, store.name, { value: store });
-    if (this.started) store.loadAll().then(() => true);
-
-    return this;
   }
 
   /**
@@ -111,13 +94,13 @@ export class BladeClient extends Client {
   public async start(): Promise<this> {
     this.once("ready", async () => {
       this.started = true;
-      this._stores.forEach(s => s.components.forEach(async p => await p.init(this)));
+      this.stores.forEach(s => s.components.forEach(async p => await p.init(this)));
 
       for (const id of (this.options.owners ?? [])) this.owners.add(this.users.get(id)!);
     });
 
     await this.languages.loadAll();
-    await Promise.all(this._stores.map(r => r.loadAll()));
+    await Promise.all(this.stores.map(r => r.loadAll()));
 
     try {
       await this.connect();

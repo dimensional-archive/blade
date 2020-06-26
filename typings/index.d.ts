@@ -6,31 +6,11 @@
 //   ../@ayanaware/errors
 //   ../events
 
-import type {
-  Base,
-  Client,
-  ClientOptions,
-  Collection,
-  EmbedOptions,
-  Emoji,
-  Guild,
-  GuildChannel,
-  Member,
-  Message,
-  MessageContent,
-  MessageFile,
-  OAuthApplicationInfo,
-  Permission,
-  PrivateChannel,
-  Role,
-  TextableChannel,
-  TextChannel,
-  User,
-  VoiceChannel
-} from "eris";
-import type { Logger } from "@ayanaware/logger";
-import type { EventIterator, EventIteratorOptions } from '@klasa/event-iterator';
-import type { GenericError } from "@ayanaware/errors";
+import { GenericError } from "@ayanaware/errors";
+import { Logger } from "@ayanaware/logger";
+import { EventIterator, EventIteratorOptions } from "@klasa/event-iterator";
+import { Base, Client, ClientOptions, Collection, EmbedOptions, Emoji, Guild, GuildChannel, Member, Message, MessageContent, MessageFile, OAuthApplicationInfo, PrivateChannel, Role, TextChannel, VoiceChannel } from "eris";
+import type { Permission, TextableChannel, User } from "eris";
 import type { EventEmitter } from "events";
 
 declare module "@kyu/blade" {
@@ -49,47 +29,39 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     cooldown: number;
-
     /**
      * @param bucket The number of requests before this is limited
      * @param cooldown The amount of milliseconds for this ratelimit to expire
      * @since 1.0.0
      */
     constructor(bucket: number, cooldown: number);
-
     /**
      * Whether this RateLimit is expired or not, allowing the bucket to be reset
      */
     get expired(): boolean;
-
     /**
      * Whether this RateLimit is limited or not
      */
     get limited(): boolean;
-
     /**
      * The remaining time in milliseconds before this RateLimit instance is reset
      */
     get remainingTime(): number;
-
     /**
      * Drips the RateLimit bucket
      * @since 1.0.0
      */
     drip(): this;
-
     /**
      * Resets the RateLimit back to it's full state
      * @since 1.0.0
      */
     reset(): this;
-
     /**
      * Resets the RateLimit's remaining uses back to full state
      * @since 1.0.0
      */
     resetRemaining(): this;
-
     /**
      * Resets the RateLimit's reset time back to full state
      * @since 1.0.0
@@ -103,9 +75,7 @@ declare module "@kyu/blade" {
      * @param cooldown The amount of milliseconds for the ratelimits from this manager to expire
      */
     constructor(bucket: number, cooldown: number);
-
     static get [Symbol.species](): typeof Storage;
-
     /**
      * The amount of times a RateLimit from this manager can drip before it's limited
      * @since 1.0.0
@@ -116,7 +86,6 @@ declare module "@kyu/blade" {
      * @param value
      */
     set bucket(value: number);
-
     /**
      * The amount of milliseconds for the ratelimits from this manager to expire
      * @since 1.0.0
@@ -127,21 +96,18 @@ declare module "@kyu/blade" {
      * @param value
      */
     set cooldown(value: number);
-
     /**
      * Gets a RateLimit from this manager or creates it if it does not exist
      * @param id The id for the RateLimit
      * @since 1.0.0
      */
     acquire(id: K): Ratelimit;
-
     /**
      * Creates a RateLimit for this manager
      * @param id The id the RateLimit belongs to
      * @since 1.0.0
      */
     create(id: K): Ratelimit;
-
     /**
      * Wraps Collection's set method to set interval to sweep inactive RateLimits
      * @param id The id the RateLimit belongs to
@@ -149,14 +115,16 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     set(id: K, ratelimit: Ratelimit): this;
-
     /**
      * Wraps Collection's sweep method to clear the interval when this manager is empty
      * @param fn The filter function
      * @param thisArg The this for the sweep
      * @since 1.0.0
      */
-    sweep(fn?: (value: Ratelimit, key: K, collection: this) => boolean, thisArg?: any): number;
+    sweep(
+      fn?: (value: Ratelimit, key: K, collection: this) => boolean,
+      thisArg?: any
+    ): number;
   }
 
   export interface ArgumentOptions {
@@ -173,7 +141,6 @@ declare module "@kyu/blade" {
     modifyOtherwise?: Modifier<FailureData, Content>;
     prompt?: ArgumentPromptOptions;
   }
-
   export interface ArgumentPromptData {
     retries: number;
     infinite: boolean;
@@ -181,7 +148,6 @@ declare module "@kyu/blade" {
     phrase: string;
     failure: void | Flag;
   }
-
   export interface ArgumentPromptOptions {
     retries?: number;
     time?: number;
@@ -202,20 +168,17 @@ declare module "@kyu/blade" {
     modifyEnded?: Modifier<ArgumentPromptData, Content>;
     modifyCancel?: Modifier<ArgumentPromptData, Content>;
   }
-
   export interface FailureData {
     phrase: string;
     failure: void | Flag;
   }
-
   export interface DefaultArgumentOptions {
     prompt?: ArgumentPromptOptions;
     otherwise?: Content | Supplier<FailureData, Content>;
     modifyOtherwise?: Modifier<FailureData, Content>;
   }
-
   export type ArgumentMatch =
-    "phrase"
+    | "phrase"
     | "flag"
     | "option"
     | "rest"
@@ -225,7 +188,7 @@ declare module "@kyu/blade" {
     | "restContent"
     | "none";
   export type ArgumentType =
-    "string"
+    | "string"
     | "lowercase"
     | "uppercase"
     | "charCodes"
@@ -276,10 +239,18 @@ declare module "@kyu/blade" {
     | (string | string[])[]
     | RegExp
     | string;
-  export type Modifier<D, T> = (ctx?: Context, text?: Content, data?: D) => T | Promise<T>;
+  export type Modifier<D, T> = (
+    ctx?: Context,
+    text?: Content,
+    data?: D
+  ) => T | Promise<T>;
   export type Supplier<D, T> = (message: Message, data?: D) => T | Promise<T>;
   export type ArgumentTypeCaster = (message: Message, value?: any) => any;
-  export type ParsedValuePredicate = (message?: Message, phrase?: string, value?: any) => boolean;
+  export type ParsedValuePredicate = (
+    message?: Message,
+    phrase?: string,
+    value?: any
+  ) => boolean;
 
   export class TypeResolver {
     handler: CommandStore;
@@ -289,15 +260,10 @@ declare module "@kyu/blade" {
     inhibitors: InhibitorStore | null;
     listeners: ListenerStore | null;
     monitors: MonitorStore | null;
-
     constructor(handler: CommandStore);
-
     addBuiltInTypes(): void;
-
     type(name: string): ArgumentTypeCaster;
-
     addType(name: string, fn: ArgumentTypeCaster): TypeResolver;
-
     addTypes(types: Record<string, ArgumentTypeCaster>): TypeResolver;
   }
 
@@ -308,64 +274,101 @@ declare module "@kyu/blade" {
     rest?: string;
     message?: Message;
     value?: any;
-
     constructor(type: string, data?: Record<string, any>);
-
     static cancel(): Flag;
-
     static retry(message: Message): Flag;
-
     static fail(value: any): Flag;
-
     static continue(command: string, ignore?: boolean, rest?: null): Flag;
-
     static is(value: any, type: string): boolean;
   }
 
-  export type ArgumentGenerator = (ctx: Context, parsed: ContentParserResult, state: ArgumentRunnerState) => IterableIterator<ArgumentOptions | Flag>;
-
+  export type ArgumentGenerator = (
+    ctx: Context,
+    parsed: ContentParserResult,
+    state: ArgumentRunnerState
+  ) => IterableIterator<ArgumentOptions | Flag>;
   export interface ArgumentRunnerState {
     usedIndices: Set<number>;
     phraseIndex: number;
     index: number;
   }
-
   export class ArgumentRunner {
     command: Command;
-
     constructor(command: Command);
-
-    get client(): BladeClient;
-
-    get handler(): CommandStore;
-
-    static increaseIndex(parsed: ContentParserResult, state: ArgumentRunnerState, n?: number): void;
-
+    get client(): import("../../..").BladeClient;
+    get handler(): import("../../..").CommandStore;
+    run(
+      message: Message,
+      parsed: ContentParserResult,
+      generator: ArgumentGenerator
+    ): Promise<any>;
+    runOne(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runPhrase(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<any>;
+    runRest(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runSeparate(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runFlag(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runOption(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runText(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runContent(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runRestContent(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    runNone(
+      message: Message,
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      arg: Argument
+    ): Promise<Flag | any>;
+    static increaseIndex(
+      parsed: ContentParserResult,
+      state: ArgumentRunnerState,
+      n?: number
+    ): void;
     static isShortCircuit(value: any): boolean;
-
-    static fromArguments(args: [ string, Argument ][]): ArgumentGenerator;
-
-    run(message: Message, parsed: ContentParserResult, generator: ArgumentGenerator): Promise<any>;
-
-    runOne(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runPhrase(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<any>;
-
-    runRest(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runSeparate(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runFlag(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runOption(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runText(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runContent(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runRestContent(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
-
-    runNone(message: Message, parsed: ContentParserResult, state: ArgumentRunnerState, arg: Argument): Promise<Flag | any>;
+    static fromArguments(args: [string, Argument][]): ArgumentGenerator;
   }
 
   export class Argument {
@@ -381,42 +384,74 @@ declare module "@kyu/blade" {
     default: any | Supplier<FailureData, any>;
     otherwise?: Content | Supplier<FailureData, Content>;
     modifyOtherwise: Modifier<FailureData, Content>;
-
-    constructor(command: Command, { match, type, flag, multipleFlags, index, unordered, limit, prompt, default: defaultValue, otherwise, modifyOtherwise, }?: ArgumentOptions);
-
+    constructor(
+      command: Command,
+      {
+        match,
+        type,
+        flag,
+        multipleFlags,
+        index,
+        unordered,
+        limit,
+        prompt,
+        default: defaultValue,
+        otherwise,
+        modifyOtherwise,
+      }?: ArgumentOptions
+    );
     get client(): BladeClient;
-
     get handler(): CommandStore;
-
-    static cast(type: ArgumentType | ArgumentTypeCaster, resolver: TypeResolver, message: Message, phrase: string): Promise<any>;
-
-    static union(...types: (ArgumentType | ArgumentTypeCaster)[]): ArgumentTypeCaster;
-
-    static product(...types: (ArgumentType | ArgumentTypeCaster)[]): ArgumentTypeCaster;
-
-    static validate(type: ArgumentType | ArgumentTypeCaster, predicate: ParsedValuePredicate): ArgumentTypeCaster;
-
-    static range(type: ArgumentType | ArgumentTypeCaster, min: number, max: number, inclusive?: boolean): ArgumentTypeCaster;
-
-    static compose(...types: (ArgumentType | ArgumentTypeCaster)[]): ArgumentTypeCaster;
-
-    static composeWithFailure(...types: (ArgumentType | ArgumentTypeCaster)[]): ArgumentTypeCaster;
-
-    static withInput(type: ArgumentType | ArgumentTypeCaster): ArgumentTypeCaster;
-
-    static tagged(type: ArgumentType | ArgumentTypeCaster, tag?: string | RegExp | ArgumentTypeCaster | (string | string[])[]): ArgumentTypeCaster;
-
-    static taggedWithInput(type: ArgumentType | ArgumentTypeCaster, tag?: string | RegExp | ArgumentTypeCaster | (string | string[])[]): ArgumentTypeCaster;
-
-    static taggedUnion(...types: (ArgumentType | ArgumentTypeCaster)[]): ArgumentTypeCaster;
-
+    static cast(
+      type: ArgumentType | ArgumentTypeCaster,
+      resolver: TypeResolver,
+      message: Message,
+      phrase: string
+    ): Promise<any>;
+    static union(
+      ...types: (ArgumentType | ArgumentTypeCaster)[]
+    ): ArgumentTypeCaster;
+    static product(
+      ...types: (ArgumentType | ArgumentTypeCaster)[]
+    ): ArgumentTypeCaster;
+    static validate(
+      type: ArgumentType | ArgumentTypeCaster,
+      predicate: ParsedValuePredicate
+    ): ArgumentTypeCaster;
+    static range(
+      type: ArgumentType | ArgumentTypeCaster,
+      min: number,
+      max: number,
+      inclusive?: boolean
+    ): ArgumentTypeCaster;
+    static compose(
+      ...types: (ArgumentType | ArgumentTypeCaster)[]
+    ): ArgumentTypeCaster;
+    static composeWithFailure(
+      ...types: (ArgumentType | ArgumentTypeCaster)[]
+    ): ArgumentTypeCaster;
+    static withInput(
+      type: ArgumentType | ArgumentTypeCaster
+    ): ArgumentTypeCaster;
+    static tagged(
+      type: ArgumentType | ArgumentTypeCaster,
+      tag?: string | RegExp | ArgumentTypeCaster | (string | string[])[]
+    ): ArgumentTypeCaster;
+    static taggedWithInput(
+      type: ArgumentType | ArgumentTypeCaster,
+      tag?: string | RegExp | ArgumentTypeCaster | (string | string[])[]
+    ): ArgumentTypeCaster;
+    static taggedUnion(
+      ...types: (ArgumentType | ArgumentTypeCaster)[]
+    ): ArgumentTypeCaster;
     static isFailure(value: any): boolean;
-
     process(message: Message, phrase: string): Promise<Flag | any>;
-
     cast(message: Message, phrase: string): Promise<any>;
-
-    collect(message: Message, commandInput?: string, parsedInput?: any): Promise<Flag | any>;
+    collect(
+      message: Message,
+      commandInput?: string,
+      parsedInput?: any
+    ): Promise<Flag | any>;
   }
 
   export interface ContentParserOptions {
@@ -425,44 +460,44 @@ declare module "@kyu/blade" {
     quoted?: boolean;
     separator?: string;
   }
-
   export interface StringData {
     type: "Phrase" | "Flag" | "OptionFlag";
     raw: string;
     key?: string;
     value?: string;
   }
-
   export interface ExtractedFlags {
     flagWords: string[];
     optionFlagWords: string[];
   }
-
   export interface ContentParserResult {
     all: StringData[];
     phrases: StringData[];
     flags: StringData[];
     optionFlags: StringData[];
   }
-
   export class ContentParser {
     flagWords: string[];
     optionFlagWords: string[];
     quoted: boolean;
     separator: string;
-
-    constructor({ flagWords, optionFlagWords, quoted, separator }?: ContentParserOptions);
-
+    constructor({
+      flagWords,
+      optionFlagWords,
+      quoted,
+      separator,
+    }?: ContentParserOptions);
     static getFlags(args: ArgumentOptions[]): Record<string, string[]>;
-
     parse(content: string): ContentParserResult;
   }
 
   export type Content =
-    MessageContent
+    | MessageContent
     | EmbedBuilder
-    | ((builder: ReplyBuilder, ctx: Context) => ReplyBuilder | Promise<ReplyBuilder>);
-
+    | ((
+        builder: ReplyBuilder,
+        ctx: Context
+      ) => ReplyBuilder | Promise<ReplyBuilder>);
   export interface ContextData {
     afterPrefix?: string;
     alias?: string;
@@ -470,7 +505,6 @@ declare module "@kyu/blade" {
     content?: string;
     prefix?: string;
   }
-
   export class Context {
     readonly store: CommandStore;
     readonly client: BladeClient;
@@ -482,86 +516,75 @@ declare module "@kyu/blade" {
     shouldEdit: boolean;
     lastResponse?: Message;
     messages: Map<string, Message> | null;
-
     constructor(store: CommandStore, message: Message);
-
     /**
      * Returns the guild in which this message was sent in.
      * @since 1.0.0
      */
     get guild(): Guild | undefined;
-
     /**
      * Returns the author of the message.
      * @since 1.0.0
      */
     get author(): User;
-
     /**
      * Returns the member who sent the message if any.
      * @since 1.0.0
      */
     get member(): Member | undefined;
-
     /**
      * Returns the channel this message was sent in.
      * @since 1.0.0
      */
     get channel(): TextableChannel;
-
     /**
      * Returns the client as a guild member.
      * @since 1.0.0
      */
     get me(): Member;
-
     /**
      * Transforms any reply builders.
      * @since 1.0.0
      */
-    static getTransformed(context: Context, message: Content): Promise<MessageContent>;
-
+    static getTransformed(
+      context: Context,
+      message: Content
+    ): Promise<MessageContent>;
     /**
      * Sends a response or edits an old response if available.
      * @param content The content of the response.
      * @since 1.0.0
      */
     reply(content: Content): Promise<Message>;
-
     /**
      * Sends a response, overwriting the last response.
      * @param content The content to send.
      * @since 1.0.0
      */
     sendNew(content: Content): Promise<Message>;
-
     /**
      * Edits the last response.
      * @param content Edit content.
      * @since 1.0.0
      */
     edit(content: Content): Promise<Message>;
-
     /**
      * Adds client prompt or user reply to messages.
      * @param message Message(s) to add.
      */
     addMessage(message: Message | Message[]): Message | Message[];
-
     /**
      * Sets the last response.
      * @param message Response to set.
      * @since 1.0.0
      */
     setLastResponse(message: Message | Message[]): Message;
-
     /**
      * Changes if the message should be edited.
      * @param state Whether the message should be editable or not.
      * @since 1.0.0
      */
     setEditable(state: boolean): this;
-
     /**
      * Get a translation string.
      * @param path The translation to get.
@@ -573,20 +596,18 @@ declare module "@kyu/blade" {
 
   export class ReplyBuilder {
     readonly ctx: Context;
-
     constructor(ctx: Context);
-
     content(str: string): ReplyBuilder;
-
     tts(value: boolean): ReplyBuilder;
-
     file(file: MessageFile): ReplyBuilder;
-
-    embed(embed: EmbedOptions | EmbedBuilder | ((builder: EmbedBuilder, ctx: Context) => EmbedBuilder)): ReplyBuilder;
-
+    embed(
+      embed:
+        | EmbedOptions
+        | EmbedBuilder
+        | ((builder: EmbedBuilder, ctx: Context) => EmbedBuilder)
+    ): ReplyBuilder;
     display(tc: TextableChannel): Promise<Message>;
-
-    build(): [ MessageContent, MessageFile[] ];
+    build(): [MessageContent, MessageFile[]];
   }
 
   export type CooldownType = "author" | "channel";
@@ -596,9 +617,11 @@ declare module "@kyu/blade" {
   export type Before = (ctx: Context) => boolean | Promise<boolean>;
   export type KeySupplier = (ctx: Context, args?: any) => string;
   export type ExecutionPredicate = (ctx: Context) => boolean;
-  export type TFunction<T = string> = (path: string, data?: Record<string, any>) => T;
+  export type TFunction<T = string> = (
+    path: string,
+    data: Record<string, any>
+  ) => T;
   export type GetTranslation<T = string> = (t: TFunction<T>) => T;
-
   export interface CommandDescription {
     /**
      * The description content.
@@ -617,7 +640,6 @@ declare module "@kyu/blade" {
      */
     examples?: string[] | GetTranslation;
   }
-
   export interface CommandOptions extends ComponentOptions {
     /**
      * Command aliases to use.
@@ -709,7 +731,6 @@ declare module "@kyu/blade" {
     separator?: string;
     lock?: "guild" | "channel" | "user" | KeySupplier;
   }
-
   /**
    * The base command class.
    * @since 1.0.0
@@ -811,7 +832,6 @@ declare module "@kyu/blade" {
      */
     regex: RegExp | RegexProvider | null;
     lock: KeySupplier | null;
-
     /**
      * Creates a new Command.
      * @param store The command store.
@@ -819,34 +839,36 @@ declare module "@kyu/blade" {
      * @param file The path to this command.
      * @param options Options to use.
      */
-    constructor(store: CommandStore, dir: string, file: string[], options?: CommandOptions);
-
+    constructor(
+      store: CommandStore,
+      dir: string,
+      file: string[],
+      options?: CommandOptions
+    );
     /**
      * Returns the bytecode of the required user permissions.
      * @since 1.0.0
      */
     get userPermissionsBytecode(): number;
-
     /**
      * Returns the bytecode of the required client permissions.
      * @since 1.0.0
      */
     get permissionsBytecode(): number;
-
     /**
      * A typescript helper decorator.
      * @param options The options to use when creating this command.
      * @constructor
      */
-    static Setup(options?: CommandOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
-
+    static Setup(
+      options?: CommandOptions
+    ): <T extends new (...args: any[]) => Component>(t: T) => T;
     /**
      * Executes this command.
      * @param ctx The message context for this execution.
      * @param args The parsed arguments.
      */
-    run(ctx: Context, args?: Record<string, any>): any | Promise<any>;
-
+    run(): any | Promise<any>;
     /**
      * Parses the arguments of this command.
      * @param message
@@ -855,13 +877,33 @@ declare module "@kyu/blade" {
     parse(message: Message, content: string): Promise<any>;
   }
 
+  export interface IComponents {
+    context: typeof Context;
+    replyBuilder: typeof ReplyBuilder;
+  }
+  export abstract class Components {
+    /**
+     * Extend a component used by blade.
+     * @since 1.0.6
+     */
+    static extend<K extends keyof IComponents, B extends IComponents[K]>(
+      component: K,
+      extender: (base: IComponents[K]) => B | B
+    ): typeof Components;
+    /**
+     * Get a component.
+     * @param component The component to get.
+     * @since 1.0.6
+     */
+    static get<K extends keyof IComponents>(component: K): IComponents[K];
+  }
+
   export interface BladeClientOptions extends ClientOptions {
     directory?: string;
     token: string;
     owners?: string | string[];
     language?: LanguageHelperOptions;
   }
-
   /**
    * The base class for creating a bot.
    * @extends Client
@@ -907,27 +949,22 @@ declare module "@kyu/blade" {
      * The options that were given to this client.
      */
     options: BladeClientOptions;
-
+    /**
+     * A set of stores that are being used by the client.
+     * @since 1.0.0
+     */
+    readonly stores: Storage<string, ComponentStore<Component>>;
     /**
      * Creates a new BladeClient.
      * @param options
      */
     constructor(options: BladeClientOptions);
-
     get invite(): string | null;
-
-    /**
-     * Uses a store.
-     * @param store The store to use.
-     */
-    use(store: ComponentStore<Component>): this;
-
     /**
      * Starts the bot.
      * @since 1.0.0
      */
     start(): Promise<this>;
-
     /**
      * Check if a member or user is an owner.
      * @param resolvable The member/user to check.
@@ -938,25 +975,19 @@ declare module "@kyu/blade" {
 
   export abstract class Provider<V extends any> {
     protected storage: Storage<string, V>;
-
     abstract init(): Promise<any>;
-
     abstract get<T>(id: string, path?: string): T | Provider<T>;
-
     abstract delete(id: string, path?: string): any | Promise<any>;
-
     abstract update(id: string, value: any, path?: string): any | Promise<any>;
   }
 
   export type Parser = (...args: any[]) => any;
-
   export interface LanguageHelperOptions {
     createDirectory?: boolean;
     directory?: string;
     parse?: Parser;
     fallbackLang?: string;
   }
-
   export class LanguageHelper extends LiteEmitter {
     /**
      * The client that is using this store.
@@ -988,19 +1019,16 @@ declare module "@kyu/blade" {
      * @since 1.0.5
      */
     parse: Parser;
-
     /**
      * @param client
      * @param options
      */
     constructor(client: BladeClient, options?: LanguageHelperOptions);
-
     /**
      * Load all languages and their namespaces.
      * @since 1.0.5
      */
     loadAll(): Promise<void>;
-
     /**
      * Loads a namespace.
      * @param language The language that
@@ -1008,12 +1036,15 @@ declare module "@kyu/blade" {
      * @since 1.0.5
      */
     load(language: Language, file: string[]): Promise<void>;
-
     /**
      * Get a translation by it's path.
      * @since 1.0.5
      */
-    translate<T = string>(lang: string, path: string, data?: Record<string, any>): T;
+    translate<T = string>(
+      lang: string,
+      path: string,
+      data?: Record<string, any>
+    ): T;
   }
 
   export interface Metadata {
@@ -1021,7 +1052,6 @@ declare module "@kyu/blade" {
     alias?: string | string[];
     id?: string;
   }
-
   export class Language {
     /**
      * The helper that loaded this language.
@@ -1048,28 +1078,28 @@ declare module "@kyu/blade" {
      * @since 1.0.5
      */
     id: string;
-
     /**
      * @param helper
      * @param folder
      * @param metadata
      */
-    constructor(helper: LanguageHelper, folder: string, { id: _id, author, alias }?: Metadata);
-
+    constructor(
+      helper: LanguageHelper,
+      folder: string,
+      { id: _id, author, alias }?: Metadata
+    );
     /**
      * Add a namespace to the map of namespaces.
      * @param ns The namespace to set.
      * @since 1.0.5
      */
     addNamespace(ns: Namespace): Map<string, Namespace>;
-
     /**
      * Get a namespace by it's name.
      * @param ns The namespace to get.
      * @since 1.0.5
      */
     getNamespace(ns: string): Namespace | undefined;
-
     /**
      * Get a translation.
      * @param path The path to the translation.
@@ -1114,36 +1144,41 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     disabled: boolean;
-
-    constructor(language: Language, file: string[], options?: Omit<ComponentOptions, "category">);
-
+    constructor(
+      language: Language,
+      file: string[],
+      options?: Omit<ComponentOptions, "category">
+    );
     /**
      * The namespace data getter.
      */
     get data(): Record<string, any>;
-
     /**
      * A typescript helper decorator.
      * @param options The options to use when creating this listener.
      * @constructor
      */
-    static Setup(options: ComponentOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
+    static Setup(
+      options: ComponentOptions
+    ): <T extends new (...args: any[]) => Component>(t: T) => T;
   }
 
-  export type MessageIteratorOptions = EventIteratorOptions<[ Message ]>;
-
+  export type MessageIteratorOptions = EventIteratorOptions<[Message]>;
   /**
    * An asynchronous iterator responsible for iterating over messages.
    * @since 1.0.0
    */
-  export class MessageIterator extends EventIterator<[ Message ]> {
+  export class MessageIterator extends EventIterator<[Message]> {
     /**
      * Construct's a new MessageIterator.
      * @param channel The channel to listen for messages.
      * @param options Any additional options to pass.
      * @since 1.0.0
      */
-    constructor(channel: TextableChannel | PrivateChannel, options?: MessageIteratorOptions);
+    constructor(
+      channel: TextableChannel | PrivateChannel,
+      options?: MessageIteratorOptions
+    );
   }
 
   /**
@@ -1165,41 +1200,52 @@ declare module "@kyu/blade" {
      * The filter used to filter out specific messages.
      * @since 0.0.1
      */
-    filter?: (message: [ Message ], collected: Storage<string, Message>) => boolean;
+    filter?: (
+      message: [Message],
+      collected: Storage<string, Message>
+    ) => boolean;
   }
-
   /**
    * The MessageCollector class responsible for collecting a set of messages.
    * @since 0.0.1
    */
-  export class MessageCollector extends Collector<Message, [ Message ], MessageIterator> {
+  export class MessageCollector extends Collector<
+    Message,
+    [Message],
+    MessageIterator
+  > {
     /**
      * Construct's a new MessageCollector.
      * @since 0.0.1
      * @param channel The channel to listen for messages.
      * @param options Any additional options to pass.
      */
-    constructor(channel: TextableChannel | PrivateChannel, options: MessageCollectorOptions);
+    constructor(
+      channel: TextableChannel | PrivateChannel,
+      options: MessageCollectorOptions
+    );
   }
 
   /**
    * The base structure collector for asynchronously collecting values.
    * @since 0.0.1
    */
-  export class Collector<T extends Base, R extends [ T, ...unknown[] ], I extends EventIterator<R>> {
+  export class Collector<
+    T extends Base,
+    R extends [T, ...unknown[]],
+    I extends EventIterator<R>
+  > {
     /**
      * The collected values.
      * @since 0.0.1
      */
     protected collected: Storage<string, T>;
-
     /**
      * Creates a new Collector.
      * @param iterator The EventIterator that is yielding values.
      * @since 1.0.0
      */
     constructor(iterator: I);
-
     /**
      * Collect's the values into the Collector's cache.
      * @since 1.0.0
@@ -1215,170 +1261,244 @@ declare module "@kyu/blade" {
     /**
      * The first item in this Storage
      */
-    get first(): [ K, V ] | null;
-
+    get first(): [K, V] | null;
     /**
      * The first value of this Storage
      */
     get firstValue(): V | null;
-
     /**
      * The first key of this Storage
      */
     get firstKey(): K | null;
-
     /**
      * The last item in this Storage
      */
-    get last(): [ K, V ] | null;
-
+    get last(): [K, V] | null;
     /**
      * The last value of this Storage
      */
     get lastValue(): V | null;
-
     /**
      * The last key of this Storage
      */
     get lastKey(): K | null;
-
     /**
      * Finds an entry from this Storage
      * @param fn Function used to find what you are looking for
      * @param thisArg Optional binding for the fn param
      */
-    find(fn: (value: V, key?: K, map?: this) => boolean, thisArg?: any): V | undefined;
-
+    find(
+      fn: (value: V, key?: K, map?: this) => boolean,
+      thisArg?: any
+    ): V | undefined;
     /**
      * Finds a key from this Storage
      * @param fn Function used to find what you are looking for
      * @param thisArg Optional binding for the fn param
      */
-    findKey(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): K | undefined;
-
+    findKey(
+      fn: (value: V, key: K, map: this) => boolean,
+      thisArg?: any
+    ): K | undefined;
     /**
      * Finds a value from this Storage
      * @param fn Function used to find what you are looking for
      * @param thisArg Optional binding for the fn param
      */
-    findValue(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): V | undefined;
-
+    findValue(
+      fn: (value: V, key: K, map: this) => boolean,
+      thisArg?: any
+    ): V | undefined;
     /**
      * Sweeps entries from this Storage
      * @param fn Function used to determine what entries are swept
      * @param thisArg Optional binding for the fn param
      */
     sweep(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): number;
-
     /**
      * Returns a new filtered Storage based on the filter function
      * @param fn Function used to determine what entries are in the new Storage
      * @param thisArg Optional binding for the fn param
      */
-    filter(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): Storage<K, V>;
-
+    filter(
+      fn: (value: V, key: K, map: this) => boolean,
+      thisArg?: any
+    ): Storage<K, V>;
     /**
      * Maps this Storage to an array (like Array#map())
      * @param fn Function to determine what is mapped to the new Array
      * @param thisArg Optional binding for the fn param
      */
     map<T = any>(fn: (value: V, key: K, map: this) => T, thisArg?: any): T[];
-
     /**
      * Tests if some entries in this Storage meets a condition
      * @param fn The function to test the condition
      * @param thisArg Optional binding for the fn param
      */
     some(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): boolean;
-
     /**
      * Tests if every entry in this Storage meets a condition
      * @param fn The function to test the condition
      * @param thisArg Optional binding for the fn param
      */
     every(fn: (value: V, key: K, map: this) => boolean, thisArg?: any): boolean;
-
     /**
      * Reduces this Storage into a singularity
      * @param fn The function to determine how this Storage is reduced
      * @param initialValue The initial value
      * @param thisArg Optional binding for the fn param
      */
-    reduce<I>(fn: (accumulator: I, value: V, key: K, map: this) => I, initialValue: I, thisArg?: any): I;
-
+    reduce<I>(
+      fn: (accumulator: I, value: V, key: K, map: this) => I,
+      initialValue: I,
+      thisArg?: any
+    ): I;
     /**
      * Returns a shallow clone of this Storage
      */
     clone(): Storage<K, V>;
-
     /**
      * Returns a new Storage with this and other Storages together
      * @param Storages Other Storages to include in the new Storage
      */
     concat(...Storages: Storage<K, V>[]): Storage<K, V>;
-
     /**
      * Naive equality compare function
      * @param Storage The Storage to compare this against
      */
     equals(Storage: Storage<K, V>): boolean;
-
     /**
      * Sorts entries in-place in this Storage
      * @param compareFunction Function to determine how this Storage should be sorted
      */
     sort(compareFunction?: (v0: V, v1: V, k0?: K, k1?: K) => number): this;
-
     /**
      * Sorts entries in a new Storage
      * @param compareFunction Function to determine how the resulting Storage should be sorted
      */
-    sorted(compareFunction?: (v0: V, v1: V, k0?: K, k1?: K) => number): Storage<K, V>;
+    sorted(
+      compareFunction?: (v0: V, v1: V, k0?: K, k1?: K) => number
+    ): Storage<K, V>;
   }
 
   type Channel = TextChannel | VoiceChannel;
-
   export class ClientUtil {
-    resolveUser(text: string, users: Collection<User>, caseSensitive?: boolean, wholeWord?: boolean): User | undefined;
-
-    resolveUsers(text: string, users: Collection<User>, caseSensitive?: boolean, wholeWord?: boolean): User[];
-
-    checkUser(text: string, user: User, caseSensitive?: boolean, wholeWord?: boolean): boolean;
-
-    resolveMember(text: string, members: Collection<Member>, caseSensitive?: boolean, wholeWord?: boolean): Member | undefined;
-
-    resolveMembers(text: string, members: Collection<Member>, caseSensitive?: boolean, wholeWord?: boolean): Member[];
-
-    checkMember(text: string, member: Member, caseSensitive?: boolean, wholeWord?: boolean): boolean;
-
-    resolveChannel(text: string, channels: Collection<any>, caseSensitive?: boolean, wholeWord?: boolean): Channel | undefined;
-
-    resolveChannels(text: string, channels: Collection<any>, caseSensitive?: boolean, wholeWord?: boolean): Channel[];
-
-    checkChannel(text: string, channel: Channel, caseSensitive?: boolean, wholeWord?: boolean): boolean;
-
-    resolveRole(text: string, roles: Collection<Role>, caseSensitive?: boolean, wholeWord?: boolean): Role | undefined;
-
-    resolveRoles(text: string, roles: Collection<Role>, caseSensitive?: boolean, wholeWord?: boolean): Role[];
-
-    checkRole(text: string, role: Role, caseSensitive?: boolean, wholeWord?: boolean): boolean;
-
-    resolveEmoji(text: string, emojis: Emoji[], caseSensitive?: boolean, wholeWord?: boolean): Emoji;
-
-    resolveEmojis(text: string, emojis: Emoji[], caseSensitive?: boolean, wholeWord?: boolean): Emoji[];
-
-    checkEmoji(text: string, emoji: Emoji, caseSensitive?: boolean, wholeWord?: boolean): boolean;
-
-    resolveGuild(text: string, guilds: Collection<Guild>, caseSensitive?: boolean, wholeWord?: boolean): Guild | undefined;
-
-    resolveGuilds(text: string, guilds: Collection<Guild>, caseSensitive?: boolean, wholeWord?: boolean): Guild[];
-
-    checkGuild(text: string, guild: Guild, caseSensitive?: boolean, wholeWord?: boolean): boolean;
-
-    awaitMessages(channel: TextableChannel, options: MessageCollectorOptions): Promise<Storage<string, Message>>;
+    resolveUser(
+      text: string,
+      users: Collection<User>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): User | undefined;
+    resolveUsers(
+      text: string,
+      users: Collection<User>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): User[];
+    checkUser(
+      text: string,
+      user: User,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): boolean;
+    resolveMember(
+      text: string,
+      members: Collection<Member>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Member | undefined;
+    resolveMembers(
+      text: string,
+      members: Collection<Member>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Member[];
+    checkMember(
+      text: string,
+      member: Member,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): boolean;
+    resolveChannel(
+      text: string,
+      channels: Collection<any>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Channel | undefined;
+    resolveChannels(
+      text: string,
+      channels: Collection<any>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Channel[];
+    checkChannel(
+      text: string,
+      channel: Channel,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): boolean;
+    resolveRole(
+      text: string,
+      roles: Collection<Role>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Role | undefined;
+    resolveRoles(
+      text: string,
+      roles: Collection<Role>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Role[];
+    checkRole(
+      text: string,
+      role: Role,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): boolean;
+    resolveEmoji(
+      text: string,
+      emojis: Emoji[],
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Emoji;
+    resolveEmojis(
+      text: string,
+      emojis: Emoji[],
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Emoji[];
+    checkEmoji(
+      text: string,
+      emoji: Emoji,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): boolean;
+    resolveGuild(
+      text: string,
+      guilds: Collection<Guild>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Guild | undefined;
+    resolveGuilds(
+      text: string,
+      guilds: Collection<Guild>,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): Guild[];
+    checkGuild(
+      text: string,
+      guild: Guild,
+      caseSensitive?: boolean,
+      wholeWord?: boolean
+    ): boolean;
+    awaitMessages(
+      channel: TextableChannel,
+      options: MessageCollectorOptions
+    ): Promise<Storage<string, Message>>;
   }
-
-  export {};
+  export { };
+    export { };
+    export { };
 
   export enum ArgumentMatches {
     PHRASE = "phrase",
@@ -1389,9 +1509,8 @@ declare module "@kyu/blade" {
     TEXT = "text",
     CONTENT = "content",
     REST_CONTENT = "restContent",
-    NONE = "none"
+    NONE = "none",
   }
-
   export enum ArgumentTypes {
     STRING = "string",
     LOWERCASE = "lowercase",
@@ -1438,7 +1557,7 @@ declare module "@kyu/blade" {
     COMMAND_ALIAS = "commandAlias",
     COMMAND = "command",
     INHIBITOR = "inhibitor",
-    LISTENER = "listener"
+    LISTENER = "listener",
   }
 
   /**
@@ -1455,12 +1574,10 @@ declare module "@kyu/blade" {
      * @param member the member
      */
     static topRole(member: Member): Role | undefined;
-
     /**
      * Returns true if a is above b in the hierarchy, otherwise false.
      */
     static above(a: Member, b: Member): boolean;
-
     /**
      * Calculates permissions of a role in a channel.
      * @param role The role to calculate the permissions of.
@@ -1468,14 +1585,12 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     static permissionsOf(role: Role, channel: GuildChannel): number;
-
     /**
      * Shows a string representation of all of the permissions
      * @param permission The permissions bit-field.
      * @since 1.0.0
      */
     static toString(permission: number): string;
-
     /**
      * Returns whether the permission the user has overlap the permissions required
      * @param user The permission the user has
@@ -1483,44 +1598,32 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     static overlaps(user: number, required: number): boolean;
-
     static add(...a: number[]): number;
   }
 
   export abstract class Util {
     static array<T>(v: T | T[]): T[];
-
     static isFunction(i: any): i is Function;
-
     static isClass(input: unknown): boolean;
-
     static isObject(value: any): boolean;
-
     static getPathSegments(path: string): string[];
-
     static walk(directory: string, files?: string[]): string[];
-
     static deepAssign<T>(o1: any, ...os: any[]): T;
-
     static flatMap(xs: any[], f: Function): any[];
-
     static intoCallable(thing: any): (...args: any[]) => any;
-
     static isPromise(value: any): value is Promise<any>;
-
-    static prefixCompare(aKey: string | Function, bKey: string | Function): number;
-
+    static prefixCompare(
+      aKey: string | Function,
+      bKey: string | Function
+    ): number;
     static choice<T>(...xs: T[]): T | null;
   }
 
   type LiteEmitterHandler = (...args: Array<any>) => void;
-
   /**
    * An error that's created whenever a handler has throw an error.
    */
-  export class LiteEmitterError extends GenericError {
-  }
-
+  export class LiteEmitterError extends GenericError {}
   /**
    * A simplified EventEmitter.
    * @since 1.0.0
@@ -1532,35 +1635,30 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     handlerCount(event: string): number;
-
     /**
      * Add a handler function for a given event.
      * @param event The name of the event.
      * @param fn The handler function.
      */
     addListener(event: string, fn: LiteEmitterHandler): this;
-
     /**
      * Remove one or all handler functions for a given event.
      * @param event The name of the event.
      * @param fn Optional handler to detach.
      */
     removeListener(event: string, fn?: LiteEmitterHandler): this;
-
     /**
      * Add a handler function for a given event.
      * @param event The name of the event.
      * @param callback
      */
     on(event: string, callback: LiteEmitterHandler): this;
-
     /**
      * Add a handler function for a given event.
      * @param event The name of the event.
      * @param callback
      */
     once(event: string, callback: LiteEmitterHandler): this;
-
     /**
      * Emit a new event to handlers.
      * @param event The name of the event.
@@ -1568,8 +1666,6 @@ declare module "@kyu/blade" {
      */
     emit(event: string, ...args: Array<any>): this;
   }
-
-  export {};
 
   export interface Embed {
     title?: string;
@@ -1584,57 +1680,39 @@ declare module "@kyu/blade" {
     type?: "rich";
     url?: string;
   }
-
   export interface EmbedAuthor {
     name: string;
     url?: string;
     icon_url?: string;
   }
-
   export interface EmbedThumbnail {
     url?: string;
   }
-
   export interface EmbedImage {
     url?: string;
   }
-
   export interface EmbedField {
     name: string;
     value: string;
     inline?: boolean;
   }
-
   export interface EmbedFooter {
     text: string;
     icon_url?: string;
   }
-
   export class EmbedBuilder {
     constructor(data?: Embed);
-
     static get default(): EmbedBuilder;
-
     color(color: number): EmbedBuilder;
-
     title(title: string): EmbedBuilder;
-
     description(text: string): EmbedBuilder;
-
     author(name: string, url?: string, iconURL?: string): EmbedBuilder;
-
     thumbnail(url: string): EmbedBuilder;
-
     field(name: string, value: string, inline?: boolean): EmbedBuilder;
-
     image(url: string): EmbedBuilder;
-
     timestamp(t?: Date): EmbedBuilder;
-
     footer(txt: string, iconURL?: string): EmbedBuilder;
-
     url(url: string): EmbedBuilder;
-
     build(): EmbedOptions;
   }
 
@@ -1643,7 +1721,6 @@ declare module "@kyu/blade" {
     disabled?: boolean;
     category?: string;
   }
-
   /**
    * An abstracted base class for all components like Command and Listener.
    * @since 1.0.0
@@ -1690,53 +1767,50 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     fullCategory: string[];
-
-    protected constructor(store: ComponentStore<Component>, directory: string, file: string[], options?: ComponentOptions);
-
+    protected constructor(
+      store: ComponentStore<Component>,
+      directory: string,
+      file: string[],
+      options?: ComponentOptions
+    );
     static set defaults(defaults: ComponentOptions);
-
     /**
      * The full path of this component
      * @since 1.0.0
      */
     get path(): string;
-
     /**
      * The category of this component.
      * @since 1.0.0
      */
     get category(): string;
-
     /**
      * A typescript helper decorator.
      * @param options The options to use when creating the component
      * @constructor
      */
-    static Setup(options?: ComponentOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
-
+    static Setup(
+      options?: ComponentOptions
+    ): <T extends new (...args: any[]) => Component>(t: T) => T;
     /**
      * Called once the bot is ready.
      */
     init(client: BladeClient): void;
-
     /**
      * Reloads this piece.
      * @since 1.0.0
      */
     reload(): Promise<Component>;
-
     /**
      * Remove this piece from the store.
      * @since 1.0.0
      */
     unload(): Component | null;
-
     /**
      * Disables this component.
      * @since 1.0.0
      */
     disable(): this;
-
     /**
      * Enables this component.
      * @since 1.0.0
@@ -1745,7 +1819,6 @@ declare module "@kyu/blade" {
   }
 
   export type InhibitorType = "all" | "pre" | "post" | "command";
-
   export interface InhibitorOptions extends ComponentOptions {
     /**
      * The type of inhibitor.
@@ -1762,7 +1835,6 @@ declare module "@kyu/blade" {
      */
     priority?: number;
   }
-
   /**
    * A message inhibitor.
    * @since 1.0.0
@@ -1783,7 +1855,6 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     priority: number;
-
     /**
      * Creates a new Inhibitor.
      * @param store The store this inhibitor belongs to
@@ -1791,8 +1862,12 @@ declare module "@kyu/blade" {
      * @param path The file path this inhibitor.
      * @param options The options to give this inhibitor.
      */
-    constructor(store: InhibitorStore, dir: string, path: string[], options?: InhibitorOptions);
-
+    constructor(
+      store: InhibitorStore,
+      dir: string,
+      path: string[],
+      options?: InhibitorOptions
+    );
     run(...args: any[]): boolean | Promise<boolean>;
   }
 
@@ -1802,20 +1877,19 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     readonly store: MonitorStore;
-
     /**
      * A typescript helper decorator.
      * @param options The options to use when creating this listener.
      * @constructor
      */
-    static Setup(options: ComponentOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
-
+    static Setup(
+      options: ComponentOptions
+    ): <T extends new (...args: any[]) => Component>(t: T) => T;
     /**
      * Runs this monitor
      * @param message
      */
     run(message: Message): Promise<void>;
-
     _ran(message: Message): Promise<void>;
   }
 
@@ -1823,7 +1897,6 @@ declare module "@kyu/blade" {
   type Fn = (...args: any[]) => any;
   type Mode = "once" | "on";
   type Mappings = Record<string, Fn | string | ListenerMapping>;
-
   export interface ListenerOptions extends ComponentOptions {
     /**
      * The event to listen for.
@@ -1842,14 +1915,12 @@ declare module "@kyu/blade" {
      */
     mode?: Mode;
   }
-
   export interface ListenerMapping {
     event: string;
     fn?: (...args: any) => any;
     emitter?: string | Emitter;
     mode?: Mode;
   }
-
   /**
    * An abstract class for adding a listener to an emitter.
    * @since 1.0.0
@@ -1879,25 +1950,27 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     mode: Mode;
-
-    constructor(store: ListenerStore, dir: string, file: string[], options: ListenerOptions);
-
+    constructor(
+      store: ListenerStore,
+      dir: string,
+      file: string[],
+      options: ListenerOptions
+    );
     /**
      * A typescript helper decorator.
      * @param options The options to use when creating this listener.
      * @constructor
      */
-    static Setup(options: ListenerOptions): <T extends new (...args: any[]) => Component>(t: T) => T;
-
+    static Setup(
+      options: ListenerOptions
+    ): <T extends new (...args: any[]) => Component>(t: T) => T;
     run(...args: any[]): any | Promise<any>;
-
     /**
      * Attaches the proper listener to the emitter
      * @since 1.0.0
      * @private
      */
     _listen(this: Listener): void;
-
     /**
      * Removes the listener from the emitter
      * @since 0.0.0-alpha
@@ -1906,18 +1979,19 @@ declare module "@kyu/blade" {
     _unListen(): void;
   }
 
-  export {};
-
   export class InhibitorStore extends ComponentStore<Inhibitor> {
     constructor(client: BladeClient, options?: ComponentStoreOptions);
-
     /**
      * Tests inhibitors against the message.
      * @param type The type of inhibitors to test.
      * @param message Message to test.
      * @param command Command to use.
      */
-    test(type: InhibitorType, message: Message, command?: Command): Promise<string | null>;
+    test(
+      type: InhibitorType,
+      message: Message,
+      command?: Command
+    ): Promise<string | null>;
   }
 
   /**
@@ -1929,21 +2003,18 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     emitter: LiteEmitter;
-
     /**
      * Creates a new Monitor Store
      * @param client The client that is using this command store.
      * @param options The options to give.
      */
     constructor(client: BladeClient, options?: ComponentStoreOptions);
-
     /**
      * A wrapper for the super.remove method.
      * @param resolvable
      * @since 1.0.0
      */
     remove(resolvable: ComponentResolvable<Monitor>): Monitor | null;
-
     /**
      * A wrapper for the super.add method.
      * @param component
@@ -1955,18 +2026,14 @@ declare module "@kyu/blade" {
   export interface ListenerStoreOptions extends ComponentStoreOptions {
     emitters?: Record<string, Emitter>;
   }
-
   export class ListenerStore extends ComponentStore<Listener> {
     emitters: Record<string, Emitter>;
-
     constructor(client: BladeClient, options?: ListenerStoreOptions);
-
     /**
      * A wrapper for the super.remove method.
      * @param resolvable The listener to remove.
      */
     remove(resolvable: ComponentResolvable<Listener>): Listener | null;
-
     /**
      * A wrapper for the super.add method.
      * @param component The listener to add.
@@ -1974,11 +2041,15 @@ declare module "@kyu/blade" {
     add(component: Listener): Listener | null;
   }
 
-  export type IgnorePermissions = (message: Message, command: Command) => boolean;
+  export type IgnorePermissions = (
+    message: Message,
+    command: Command
+  ) => boolean;
   export type IgnoreCooldown = (message: Message, command: Command) => boolean;
-  export type PrefixProvider = (ctx: Context) => string | string[] | Promise<string | string[]>;
+  export type PrefixProvider = (
+    ctx: Context
+  ) => string | string[] | Promise<string | string[]>;
   export type LanguageGetter = (ctx: Context) => string | Language;
-
   export interface HandlingOptions {
     /**
      * A method used for getting a language.
@@ -2030,7 +2101,6 @@ declare module "@kyu/blade" {
      */
     argumentDefaults?: DefaultArgumentOptions;
   }
-
   export interface CommandStoreOptions extends ComponentStoreOptions {
     /**
      * Message handling options.
@@ -2041,7 +2111,6 @@ declare module "@kyu/blade" {
      */
     defaultCooldown?: number;
   }
-
   /**
    * A command store that handles loading of commands.
    */
@@ -2072,79 +2141,75 @@ declare module "@kyu/blade" {
      * A prefix storage.
      */
     prefixes: Storage<string | PrefixProvider, Set<string>>;
-
     /**
      * Creates a new Command Store
      * @param client The client that is using this command store.
      * @param options The options to give.
      */
     constructor(client: BladeClient, options?: CommandStoreOptions);
-
     /**
      * A wrapper for the super.add method
      * @param component
      * @since 1.0.0
      */
     add(component: Command): Command | null;
-
     /**
      * A wrapper for the super.remove method.
      * @param resolvable
      * @since 1.0.0
      */
     remove(resolvable: ComponentResolvable<Command>): Command | null;
-
     useInhibitorStore(inhibitorStore: InhibitorStore): this;
-
     useMonitorStore(inhibitorStore: MonitorStore): this;
-
     useListenersStore(listenerStore: ListenerStore): this;
-
     /**
      * Finds a command
      * @param id
      */
     findCommand(id: string): Command | undefined;
-
     /**
      * Handles a sent message.
      * @param message The received message.
      * @since 1.0.0
      */
     handle(message: Message): Promise<boolean>;
-
     handleRegexAndConditionalCommands(message: Message): Promise<boolean>;
-
     handleRegexCommands(message: Message): Promise<boolean>;
-
     handleConditionalCommands(message: Message): Promise<boolean>;
-
-    handleDirectCommand(message: Message, content: string, command: Command, ignore?: boolean): Promise<null | void | boolean>;
-
-    runCommand(message: Message, command: Command, args: Record<string, any>): Promise<void>;
-
+    handleDirectCommand(
+      message: Message,
+      content: string,
+      command: Command,
+      ignore?: boolean
+    ): Promise<null | void | boolean>;
+    runCommand(
+      message: Message,
+      command: Command,
+      args: Record<string, any>
+    ): Promise<void>;
     parseCommand(message: Message): Promise<ContextData>;
-
-    parseMultiplePrefixes(message: Message, pairs: [ string, Set<string> | null ][]): ContextData;
-
-    parseWithPrefix(message: Message, prefix: string, associatedCommands?: Set<string> | null): ContextData;
-
+    parseMultiplePrefixes(
+      message: Message,
+      pairs: [string, Set<string> | null][]
+    ): ContextData;
+    parseWithPrefix(
+      message: Message,
+      prefix: string,
+      associatedCommands?: Set<string> | null
+    ): ContextData;
     parseCommandOverwrittenPrefixes(message: Message): Promise<ContextData>;
-
     /**
      * Runs all "all" type inhibitors.
      * @param message The message to pass.
      * @since 1.0.0
      */
     runAllTypeInhibitors(message: Message): Promise<boolean>;
-
     /**
      * Runs all "pre" type inhibitors
      * @param message The message to pass.
      * @since 1.0.0
      */
     runPreTypeInhibitors(message: Message): Promise<boolean>;
-
     /**
      * Runs all "post" type inhibitors.
      * @param message The message to pass.
@@ -2152,30 +2217,28 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     runPostTypeInhibitors(message: Message, command: Command): Promise<boolean>;
-
-    runAllCommandInhibitors(message: Message, command: Command): Promise<boolean>;
-
+    runAllCommandInhibitors(
+      message: Message,
+      command: Command
+    ): Promise<boolean>;
     /**
      * Runs permissions checks.
      * @param message The message to pass.
      * @param command THe command to pass.
      */
     runPermissionChecks(message: Message, command: Command): Promise<boolean>;
-
     /**
      * Add a prompt to the prompt storage.
      * @param channel The channel of the prompt.
      * @param user The user to add.
      */
     addPrompt(channel: Channel, user: User): void;
-
     /**
      * Removes a prompt
      * @param channel Prompt channel.
      * @param user Prompt user.
      */
     removePrompt(channel: Channel, user: User): void;
-
     /**
      * Check if a prompt exists.
      * @param channel The channel of the prompt.
@@ -2183,7 +2246,6 @@ declare module "@kyu/blade" {
      */
     hasPrompt(channel: Channel, user: User): boolean;
   }
-
   export enum CommandStoreEvents {
     MESSAGE_INHIBITED = "messageInhibited",
     MESSAGE_INVALID = "messageInvalid",
@@ -2194,20 +2256,18 @@ declare module "@kyu/blade" {
     COMMAND_LOCKED = "commandLocked",
     COMMAND_CANCELLED = "commandCancelled",
     COMMAND_STARTED = "commandStarted",
-    COMMAND_FINISHED = "commandFinished"
+    COMMAND_FINISHED = "commandFinished",
   }
-
   export enum PreDefinedReason {
     SELF = "blockedSelf",
     BOT = "blockedBot",
     GUILD = "guild",
     DM = "dm",
-    DEVELOPER = "developer"
+    DEVELOPER = "developer",
   }
 
   export type LoadFilter = (file: string) => boolean | Promise<boolean>;
   export type ComponentResolvable<T> = string | T;
-
   export interface ComponentStoreOptions {
     classToHandle?: typeof Component;
     priority?: number;
@@ -2217,12 +2277,13 @@ declare module "@kyu/blade" {
     createDirectory?: boolean;
     directory?: string;
   }
-
   /**
    * A component store.
    * @since 1.0.0
    */
-  export abstract class ComponentStore<T extends Component> extends LiteEmitter {
+  export abstract class ComponentStore<
+    T extends Component
+  > extends LiteEmitter {
     /**
      * The client that is using this store.
      * @since 1.0.0
@@ -2263,7 +2324,6 @@ declare module "@kyu/blade" {
      * @since 1.0.0
      */
     directory: string;
-
     /**
      * Creates a new Component Store.
      * @param client The client that's using this store.
@@ -2271,45 +2331,44 @@ declare module "@kyu/blade" {
      * @param options The options to give this store.
      * @since 1.0.0
      */
-    protected constructor(client: BladeClient, name: string, options?: ComponentStoreOptions);
-
-    static walkDir(store: ComponentStore<Component>, dir: string): Promise<Component>[];
-
+    protected constructor(
+      client: BladeClient,
+      name: string,
+      options?: ComponentStoreOptions
+    );
+    static walkDir(
+      store: ComponentStore<Component>,
+      dir: string
+    ): Promise<Component>[];
     load(directory: string, file: string[]): Promise<T>;
-
     /**
      * Loads all files in the given directory.
      * @since 1.0.0
      * @returns {number} Total components loaded.
      */
     loadAll(): Promise<number>;
-
     /**
      * Resolves a string or component into... a component.
      * @param resolvable
      * @returns {Component} The resolved component.
      */
     resolve(resolvable: ComponentResolvable<T>): T | undefined;
-
     /**
      * Removes a component from the store.
      * @param resolvable The component to remove.
      * @since 1.0.0
      */
     remove(resolvable: ComponentResolvable<T>): T | null;
-
     /**
      * Adds a component to the store.
      * @param component
      * @since 1.0.0
      */
     add(component: T): T | null;
-
     /**
      * Returns the string representation of this store.
      * @since 1.0.0
      */
     toString(): string;
   }
-
 }

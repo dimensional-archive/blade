@@ -1,26 +1,19 @@
-import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "./Base";
-import {
-  Context,
-  ContextData,
-  InhibitorStore,
-  Language,
-  ListenerStore,
-  MonitorStore,
-  Storage,
-  TypeResolver,
-  Util
-} from "../..";
-import Permissions from "../../utils/Permissions";
-
-import type { BladeClient } from "../Client";
-import type { Channel, Message, User } from "eris";
-import { Constants } from "eris";
-import { Command, DefaultArgumentOptions, Flag, RatelimitManager } from "../components/command/";
 import { IllegalStateError } from "@ayanaware/errors";
+import { Constants } from "eris";
+import type { Channel, Message, User } from "eris";
+import { Context, ContextData, InhibitorStore, Language, ListenerStore, MonitorStore, Storage, TypeResolver, Util } from "../..";
+import { Permissions } from "../../utils/Permissions";
+import type { BladeClient } from "../Client";
+import { Components } from "../Components";
+import { Command, DefaultArgumentOptions, Flag, RatelimitManager } from "../components/command/";
+import { ComponentResolvable, ComponentStore, ComponentStoreOptions } from "./Base";
+
 
 export type IgnorePermissions = (message: Message, command: Command) => boolean;
 export type IgnoreCooldown = (message: Message, command: Command) => boolean;
-export type PrefixProvider = (ctx: Context) => string | string[] | Promise<string | string[]>;
+export type PrefixProvider = (
+  ctx: Context
+) => string | string[] | Promise<string | string[]>;
 export type LanguageGetter = (ctx: Context) => string | Language;
 
 export interface HandlingOptions {
@@ -72,7 +65,7 @@ export interface HandlingOptions {
   /**
    * Default options for arguments.
    */
-  argumentDefaults?: DefaultArgumentOptions
+  argumentDefaults?: DefaultArgumentOptions;
 }
 
 export interface CommandStoreOptions extends ComponentStoreOptions {
@@ -115,13 +108,19 @@ export class CommandStore extends ComponentStore<Command> {
   /**
    * A prefix storage.
    */
-  public prefixes: Storage<string | PrefixProvider, Set<string>> = new Storage();
+  public prefixes: Storage<
+    string | PrefixProvider,
+    Set<string>
+  > = new Storage();
 
   /**
    * A map of cooldowns.
    * @since 1.0.0
    */
-  private readonly cooldowns: WeakMap<Command, RatelimitManager> = new WeakMap();
+  private readonly cooldowns: WeakMap<
+    Command,
+    RatelimitManager
+  > = new WeakMap();
   /**
    * A storage for prompts.
    * @since 1.0.0
@@ -143,47 +142,50 @@ export class CommandStore extends ComponentStore<Command> {
   public constructor(client: BladeClient, options: CommandStoreOptions = {}) {
     super(client, "commands", {
       ...options,
-      classToHandle: Command
+      classToHandle: Command,
     });
 
     this.types = new TypeResolver(this);
 
-    this.handling = Util.deepAssign(<HandlingOptions>{
-      allowBots: false,
-      allowSelf: false,
-      allowUsers: true,
-      enabled: true,
-      ignoreCooldown: "",
-      ignorePermissions: "",
-      storeMessages: true,
-      handleEdits: true,
-      sendTyping: true,
-      prefix: [ "!" ],
-      getLanguage: () => "en-US",
-      argumentDefaults: {
-        prompt: {
-          start: "",
-          retry: "",
-          timeout: "",
-          ended: "",
-          cancel: "",
-          retries: 1,
-          time: 30000,
-          cancelWord: "cancel",
-          stopWord: "stop",
-          optional: false,
-          infinite: false,
-          limit: Infinity,
-          breakout: true,
+    this.handling = Util.deepAssign(
+      <HandlingOptions>{
+        allowBots: false,
+        allowSelf: false,
+        allowUsers: true,
+        enabled: true,
+        ignoreCooldown: "",
+        ignorePermissions: "",
+        storeMessages: true,
+        handleEdits: true,
+        sendTyping: true,
+        prefix: ["!"],
+        getLanguage: () => "en-US",
+        argumentDefaults: {
+          prompt: {
+            start: "",
+            retry: "",
+            timeout: "",
+            ended: "",
+            cancel: "",
+            retries: 1,
+            time: 30000,
+            cancelWord: "cancel",
+            stopWord: "stop",
+            optional: false,
+            infinite: false,
+            limit: Infinity,
+            breakout: true,
+          },
         },
-      }
-    }, options.handling ?? {})
+      },
+      options.handling ?? {}
+    );
 
     this.defaultCooldown = options.defaultCooldown ?? 5000;
 
     if (this.handling.enabled) {
       this.client.once("ready", () => {
-        this.client.on("messageCreate", message => this.handle(message))
+        this.client.on("messageCreate", (message) => this.handle(message));
 
         if (this.handling.handleEdits) {
           this.client.on("messageUpdate", async (o, m) => {
@@ -191,7 +193,7 @@ export class CommandStore extends ComponentStore<Command> {
             if (this.handling.handleEdits) await this.handle(o);
           });
         }
-      })
+      });
     }
   }
 
@@ -207,7 +209,9 @@ export class CommandStore extends ComponentStore<Command> {
     for (let alias of command.aliases) {
       const conflict = this.aliases.get(alias.toLowerCase());
       if (conflict)
-        throw new IllegalStateError(`Alias '${alias}' of '${command.name}' already exists on '${conflict}'`);
+        throw new IllegalStateError(
+          `Alias '${alias}' of '${command.name}' already exists on '${conflict}'`
+        );
 
       alias = alias.toLowerCase();
       this.aliases.set(alias, command.name);
@@ -217,7 +221,9 @@ export class CommandStore extends ComponentStore<Command> {
         if (replacement !== alias) {
           const replacementConflict = this.aliases.get(replacement);
           if (replacementConflict)
-            throw new IllegalStateError(`Alias '${alias}' of '${command.name}' already exists on '${conflict}'`);
+            throw new IllegalStateError(
+              `Alias '${alias}' of '${command.name}' already exists on '${conflict}'`
+            );
 
           this.aliases.set(replacement, command.name);
         }
@@ -233,7 +239,7 @@ export class CommandStore extends ComponentStore<Command> {
           if (prefixes) {
             prefixes.add(command.name);
           } else {
-            this.prefixes.set(prefix, new Set([ command.name ]));
+            this.prefixes.set(prefix, new Set([command.name]));
             newEntry = true;
           }
         }
@@ -242,7 +248,7 @@ export class CommandStore extends ComponentStore<Command> {
         if (prefixes) {
           prefixes.add(command.name);
         } else {
-          this.prefixes.set(command.prefix, new Set([ command.name ]));
+          this.prefixes.set(command.prefix, new Set([command.name]));
           newEntry = true;
         }
       }
@@ -302,17 +308,17 @@ export class CommandStore extends ComponentStore<Command> {
   public useInhibitorStore(inhibitorStore: InhibitorStore): this {
     this.inhibitors = inhibitorStore;
     this.types.inhibitors = inhibitorStore;
-    return this
+    return this;
   }
 
   public useMonitorStore(inhibitorStore: MonitorStore): this {
     this.types.monitors = inhibitorStore;
-    return this
+    return this;
   }
 
   public useListenersStore(listenerStore: ListenerStore): this {
     this.types.listeners = listenerStore;
-    return this
+    return this;
   }
 
   /**
@@ -337,7 +343,7 @@ export class CommandStore extends ComponentStore<Command> {
       if (this.contextStorage.has(message.id)) {
         message.ctx = this.contextStorage.get(message.id)!;
       } else {
-        message.ctx = new Context(this, message);
+        message.ctx = new (Components.get("context"))(this, message);
         this.contextStorage.set(message.id, message.ctx);
       }
 
@@ -346,7 +352,10 @@ export class CommandStore extends ComponentStore<Command> {
       let parsed = await this.parseCommand(message);
       if (!parsed.command) {
         const overParsed = await this.parseCommandOverwrittenPrefixes(message);
-        if (overParsed.command || (parsed.prefix == null && overParsed.prefix != null)) {
+        if (
+          overParsed.command ||
+          (parsed.prefix == null && overParsed.prefix != null)
+        ) {
           parsed = overParsed;
         }
       }
@@ -355,7 +364,11 @@ export class CommandStore extends ComponentStore<Command> {
       if (!parsed.command) {
         ran = await this.handleRegexAndConditionalCommands(message);
       } else {
-        ran = await this.handleDirectCommand(message, parsed.content!, parsed.command);
+        ran = await this.handleDirectCommand(
+          message,
+          parsed.content!,
+          parsed.command
+        );
       }
 
       if (ran === false) {
@@ -365,7 +378,7 @@ export class CommandStore extends ComponentStore<Command> {
 
       return ran as boolean;
     } catch (e) {
-      this.emit("error", e, message)
+      this.emit("error", e, message);
       return false;
     }
   }
@@ -392,7 +405,7 @@ export class CommandStore extends ComponentStore<Command> {
 
     const matchedCommands: any[] = [];
     for (const entry of hasRegexCommands) {
-      console.log(entry)
+      console.log(entry);
       const match = message.content.match(entry.regex);
       if (!match) continue;
 
@@ -474,10 +487,10 @@ export class CommandStore extends ComponentStore<Command> {
     try {
       if (!ignore) {
         if (message.editedTimestamp && !command.editable) {
-          return false
+          return false;
         }
         if (await this.runPostTypeInhibitors(message, command)) {
-          return false
+          return false;
         }
       }
 
@@ -486,11 +499,7 @@ export class CommandStore extends ComponentStore<Command> {
 
       const args = await command.parse(message, content);
       if (Flag.is(args, "cancel")) {
-        this.emit(
-          CommandStoreEvents.COMMAND_CANCELLED,
-          message.ctx,
-          command
-        );
+        this.emit(CommandStoreEvents.COMMAND_CANCELLED, message.ctx, command);
         return true;
       } else if (Flag.is(args, "retry")) {
         this.emit(
@@ -516,11 +525,7 @@ export class CommandStore extends ComponentStore<Command> {
         if (key) {
           if (command.locker.has(key)) {
             key = null;
-            this.emit(
-              CommandStoreEvents.COMMAND_LOCKED,
-              message.ctx,
-              command
-            );
+            this.emit(CommandStoreEvents.COMMAND_LOCKED, message.ctx, command);
             return true;
           }
 
@@ -546,42 +551,54 @@ export class CommandStore extends ComponentStore<Command> {
 
     try {
       this.emit(CommandStoreEvents.COMMAND_STARTED, message, command);
+      // @ts-ignore
       const ret = await command.run(message.ctx, args);
       this.emit(CommandStoreEvents.COMMAND_FINISHED, message, command, ret);
     } catch (e) {
       this.emit("commandError", message, command, e);
     } finally {
-      const ignored = Util.array(Util.isFunction(this.handling.ignoreCooldown)
-        ? await this.handling.ignoreCooldown.call(this, message, command)
-        : this.handling.ignoreCooldown)
+      const ignored = Util.array(
+        Util.isFunction(this.handling.ignoreCooldown)
+          ? await this.handling.ignoreCooldown.call(this, message, command)
+          : this.handling.ignoreCooldown
+      );
 
       if (command.cooldown > 0 && !ignored.includes(message.author.id)) {
         const cooldown = this.getCooldown(message, command);
         try {
           cooldown.drip();
         } catch (err) {
-          this.client.emit("cooldown", message, command, cooldown.remainingTime);
+          this.client.emit(
+            "cooldown",
+            message,
+            command,
+            cooldown.remainingTime
+          );
         }
       }
     }
   }
 
   public async parseCommand(message: Message) {
-    let prefixes: string[] = Util.array(await Util.intoCallable(this.handling.prefix)(message.ctx));
-    const allowMention = await Util.intoCallable(this.handling.prefix)(message.ctx);
+    let prefixes: string[] = Util.array(
+      await Util.intoCallable(this.handling.prefix)(message.ctx)
+    );
+    const allowMention = await Util.intoCallable(this.handling.prefix)(
+      message.ctx
+    );
 
     if (allowMention) {
       const mentions = [
         `<@${this.client.user.id}>`,
         `<@!${this.client.user.id}>`,
       ];
-      prefixes = [ ...mentions, ...prefixes ];
+      prefixes = [...mentions, ...prefixes];
     }
 
     prefixes.sort(Util.prefixCompare);
     return this.parseMultiplePrefixes(
       message,
-      prefixes.map((p) => [ p, null ])
+      prefixes.map((p) => [p, null])
     );
   }
 
@@ -589,9 +606,11 @@ export class CommandStore extends ComponentStore<Command> {
 
   public parseMultiplePrefixes(
     message: Message,
-    pairs: [ string, Set<string> | null ][],
+    pairs: [string, Set<string> | null][]
   ): ContextData {
-    const parses = pairs.map(([ prefix, cmds ]) => this.parseWithPrefix(message, prefix, cmds));
+    const parses = pairs.map(([prefix, cmds]) =>
+      this.parseWithPrefix(message, prefix, cmds)
+    );
     const result = parses.find((parsed) => parsed.command);
 
     if (result) return result;
@@ -612,8 +631,10 @@ export class CommandStore extends ComponentStore<Command> {
       return {};
     }
 
-    const endOfPrefix = lowerContent.indexOf(prefix.toLowerCase()) + prefix.length;
-    const startOfArgs = message.content.slice(endOfPrefix).search(/\S/) + prefix.length;
+    const endOfPrefix =
+      lowerContent.indexOf(prefix.toLowerCase()) + prefix.length;
+    const startOfArgs =
+      message.content.slice(endOfPrefix).search(/\S/) + prefix.length;
     const alias = message.content.slice(startOfArgs).split(/\s+|\n+/)[0];
     const command = this.findCommand(alias);
     const content = message.content
@@ -645,11 +666,11 @@ export class CommandStore extends ComponentStore<Command> {
       const prefixes = Util.array(
         await Util.intoCallable(provider)(message.ctx)
       );
-      return prefixes.map((p) => [ p, cmds ]);
+      return prefixes.map((p) => [p, cmds]);
     });
 
     const pairs = Util.flatMap(await Promise.all(promises), (x: any) => x);
-    pairs.sort(([ a ], [ b ]) => Util.prefixCompare(a, b));
+    pairs.sort(([a], [b]) => Util.prefixCompare(a, b));
     return this.parseMultiplePrefixes(message, pairs);
   }
 
@@ -664,14 +685,25 @@ export class CommandStore extends ComponentStore<Command> {
       : null;
 
     if (reason != null)
-      this.emit(CommandStoreEvents.MESSAGE_INHIBITED, message, reason)
-    else if (this.handling.allowSelf && message.author.id === this.client.user.id) {
-      console.log("self")
-      this.emit(CommandStoreEvents.MESSAGE_INHIBITED, message, PreDefinedReason.SELF)
+      this.emit(CommandStoreEvents.MESSAGE_INHIBITED, message, reason);
+    else if (
+      this.handling.allowSelf &&
+      message.author.id === this.client.user.id
+    ) {
+      console.log("self");
+      this.emit(
+        CommandStoreEvents.MESSAGE_INHIBITED,
+        message,
+        PreDefinedReason.SELF
+      );
     } else if (!this.handling.allowBots && message.author.bot) {
-      this.emit(CommandStoreEvents.MESSAGE_INHIBITED, message, PreDefinedReason.BOT)
+      this.emit(
+        CommandStoreEvents.MESSAGE_INHIBITED,
+        message,
+        PreDefinedReason.BOT
+      );
     } else if (this.hasPrompt(message.channel, message.author))
-      this.emit(CommandStoreEvents.IN_PROMPT, message)
+      this.emit(CommandStoreEvents.IN_PROMPT, message);
     else return false;
 
     return true;
@@ -686,10 +718,11 @@ export class CommandStore extends ComponentStore<Command> {
    */
   public async runPreTypeInhibitors(message: Message): Promise<boolean> {
     const reason = this.inhibitors
-      ? await this.inhibitors.test('pre', message)
+      ? await this.inhibitors.test("pre", message)
       : null;
 
-    if (reason != null) this.emit(CommandStoreEvents.MESSAGE_INHIBITED, message, reason);
+    if (reason != null)
+      this.emit(CommandStoreEvents.MESSAGE_INHIBITED, message, reason);
     else return false;
 
     return true;
@@ -701,22 +734,43 @@ export class CommandStore extends ComponentStore<Command> {
    * @param command The command to pass.
    * @since 1.0.0
    */
-  public async runPostTypeInhibitors(message: Message, command: Command): Promise<boolean> {
+  public async runPostTypeInhibitors(
+    message: Message,
+    command: Command
+  ): Promise<boolean> {
     if (command.restrictions.includes("owner")) {
       const isOwner = this.client.isOwner(message.author);
       if (!isOwner) {
-        this.emit(CommandStoreEvents.COMMAND_INHIBITED, message, command, PreDefinedReason.DEVELOPER);
+        this.emit(
+          CommandStoreEvents.COMMAND_INHIBITED,
+          message,
+          command,
+          PreDefinedReason.DEVELOPER
+        );
         return true;
       }
     }
 
     if (command.channel.includes("text") && !message.member) {
-      this.emit(CommandStoreEvents.COMMAND_INHIBITED, message, command, PreDefinedReason.GUILD);
+      this.emit(
+        CommandStoreEvents.COMMAND_INHIBITED,
+        message,
+        command,
+        PreDefinedReason.GUILD
+      );
       return true;
     }
 
-    if (!command.channel.includes("dm") && message.channel.type === Constants.ChannelTypes.DM) {
-      this.emit(CommandStoreEvents.COMMAND_INHIBITED, message, command, PreDefinedReason.DM);
+    if (
+      !command.channel.includes("dm") &&
+      message.channel.type === Constants.ChannelTypes.DM
+    ) {
+      this.emit(
+        CommandStoreEvents.COMMAND_INHIBITED,
+        message,
+        command,
+        PreDefinedReason.DM
+      );
       return true;
     }
 
@@ -734,12 +788,16 @@ export class CommandStore extends ComponentStore<Command> {
     return false;
   }
 
-  public async runAllCommandInhibitors(message: Message, command: Command): Promise<boolean> {
+  public async runAllCommandInhibitors(
+    message: Message,
+    command: Command
+  ): Promise<boolean> {
     const reason = this.inhibitors
       ? await this.inhibitors.test("command", message, command)
       : null;
 
-    if (reason != null) this.emit(CommandStoreEvents.COMMAND_INHIBITED, message, command, reason);
+    if (reason != null)
+      this.emit(CommandStoreEvents.COMMAND_INHIBITED, message, command, reason);
     else return false;
 
     return true;
@@ -750,21 +808,41 @@ export class CommandStore extends ComponentStore<Command> {
    * @param message The message to pass.
    * @param command THe command to pass.
    */
-  public async runPermissionChecks(message: Message, command: Command): Promise<boolean> {
+  public async runPermissionChecks(
+    message: Message,
+    command: Command
+  ): Promise<boolean> {
     if (command.permissions) {
       if (Util.isFunction(command.permissions)) {
         let missing = command.permissions(message);
         if (Util.isPromise(missing)) missing = await missing;
 
         if (missing != null) {
-          this.emit(CommandStoreEvents.MISSING_PERMISSIONS, message, command, 'client', missing);
+          this.emit(
+            CommandStoreEvents.MISSING_PERMISSIONS,
+            message,
+            command,
+            "client",
+            missing
+          );
           return true;
         }
       } else if (message.member) {
-        const me = message.member.guild.members.get(this.client.user.id)!
-        if (!Permissions.overlaps(me.permission.allow, command.permissionsBytecode)) {
+        const me = message.member.guild.members.get(this.client.user.id)!;
+        if (
+          !Permissions.overlaps(
+            me.permission.allow,
+            command.permissionsBytecode
+          )
+        ) {
           const _ = command.permissionsBytecode & ~me.permission.allow;
-          this.emit(CommandStoreEvents.MISSING_PERMISSIONS, message, command, 'client', _);
+          this.emit(
+            CommandStoreEvents.MISSING_PERMISSIONS,
+            message,
+            command,
+            "client",
+            _
+          );
           return true;
         }
       }
@@ -775,9 +853,9 @@ export class CommandStore extends ComponentStore<Command> {
 
       const isIgnored = Array.isArray(ignorer)
         ? ignorer.includes(message.author.id)
-        : typeof ignorer === 'function'
-          ? ignorer(message, command)
-          : message.author.id === ignorer;
+        : typeof ignorer === "function"
+        ? ignorer(message, command)
+        : message.author.id === ignorer;
 
       if (!isIgnored) {
         if (Util.isFunction(command.userPermissions)) {
@@ -785,13 +863,32 @@ export class CommandStore extends ComponentStore<Command> {
           if (Util.isPromise(missing)) missing = await missing;
 
           if (missing != null) {
-            this.emit(CommandStoreEvents.MISSING_PERMISSIONS, message, command, 'user', missing);
+            this.emit(
+              CommandStoreEvents.MISSING_PERMISSIONS,
+              message,
+              command,
+              "user",
+              missing
+            );
             return true;
           }
         } else if (message.member) {
-          if (!Permissions.overlaps(message.member.permission.allow, command.userPermissionsBytecode)) {
-            const _ = command.userPermissionsBytecode & ~message.member.permission.allow;
-            this.emit(CommandStoreEvents.MISSING_PERMISSIONS, message, command, 'user', _);
+          if (
+            !Permissions.overlaps(
+              message.member.permission.allow,
+              command.userPermissionsBytecode
+            )
+          ) {
+            const _ =
+              command.userPermissionsBytecode &
+              ~message.member.permission.allow;
+            this.emit(
+              CommandStoreEvents.MISSING_PERMISSIONS,
+              message,
+              command,
+              "user",
+              _
+            );
             return true;
           }
         }
@@ -809,7 +906,7 @@ export class CommandStore extends ComponentStore<Command> {
   public addPrompt(channel: Channel, user: User): void {
     let users = this.promptStorage.get(channel.id);
     if (!users) this.promptStorage.set(channel.id, new Set());
-    users = this.promptStorage.get(channel.id)
+    users = this.promptStorage.get(channel.id);
     users!.add(user.id);
   }
 
@@ -844,7 +941,11 @@ export class CommandStore extends ComponentStore<Command> {
       this.cooldowns.set(command, cooldownManager);
     }
 
-    return cooldownManager.acquire(message.ctx.guild ? Reflect.get(message, command.cooldownType).id : message.author.id);
+    return cooldownManager.acquire(
+      message.ctx.guild
+        ? Reflect.get(message, command.cooldownType).id
+        : message.author.id
+    );
   }
 }
 
@@ -859,7 +960,6 @@ export enum CommandStoreEvents {
   COMMAND_CANCELLED = "commandCancelled",
   COMMAND_STARTED = "commandStarted",
   COMMAND_FINISHED = "commandFinished",
-
 }
 
 export enum PreDefinedReason {
@@ -867,5 +967,5 @@ export enum PreDefinedReason {
   BOT = "blockedBot",
   GUILD = "guild",
   DM = "dm",
-  DEVELOPER = "developer"
+  DEVELOPER = "developer",
 }

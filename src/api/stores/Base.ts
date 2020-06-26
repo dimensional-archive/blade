@@ -31,8 +31,8 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
     classToHandle: Component,
     autoCategory: false,
     loadFilter: () => true,
-    createDirectory: true
-  }
+    createDirectory: true,
+  };
 
   /**
    * The client that is using this store.
@@ -83,12 +83,17 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
    * @param options The options to give this store.
    * @since 1.0.0
    */
-  protected constructor(client: BladeClient, name: string, options: ComponentStoreOptions = {}) {
+  protected constructor(
+    client: BladeClient,
+    name: string,
+    options: ComponentStoreOptions = {}
+  ) {
     super();
     options = Object.assign(options, ComponentStore._defaults);
 
     this.client = client;
     this.name = name;
+    this.client.stores.set(name, this);
 
     this.priority = options.priority ?? -1;
     this.classToHandle = options.classToHandle ?? Component;
@@ -97,9 +102,13 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
     this.directory = options.directory ?? join(client.directory, this.name);
 
     if (options.defaults) options.classToHandle!.defaults = options.defaults;
+    if (client.started) this.loadAll();
   }
 
-  public static walkDir(store: ComponentStore<Component>, dir: string): Promise<Component>[] {
+  public static walkDir(
+    store: ComponentStore<Component>,
+    dir: string
+  ): Promise<Component>[] {
     let files: string[] = [];
     try {
       files = Util.walk(dir);
@@ -111,10 +120,8 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
       }
     }
 
-
-    return files.map(file => store.load(dir, relative(dir, file).split(sep)));
+    return files.map((file) => store.load(dir, relative(dir, file).split(sep)));
   }
-
 
   public async load(directory: string, file: string[]): Promise<T> {
     const loc = join(directory, ...file);
@@ -122,13 +129,17 @@ export abstract class ComponentStore<T extends Component> extends LiteEmitter {
 
     try {
       const loaded = await import(loc);
-      const loadedComp = 'default' in loaded ? loaded.default : loaded;
+      const loadedComp = "default" in loaded ? loaded.default : loaded;
 
-      if (!Util.isClass(loadedComp)) throw new ParseError('The exported structure is not a class.');
+      if (!Util.isClass(loadedComp))
+        throw new ParseError("The exported structure is not a class.");
 
-      this.add(new loadedComp(this, directory, file))
+      this.add(new loadedComp(this, directory, file));
     } catch (e) {
-      this.emit("loadError", new ParseError(`Couldn't parse file ${file}`).setCause(e));
+      this.emit(
+        "loadError",
+        new ParseError(`Couldn't parse file ${file}`).setCause(e)
+      );
     }
 
     delete require.cache[loc];

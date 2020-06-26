@@ -1,12 +1,12 @@
-import { Component, ComponentOptions } from "../Base";
-import { Argument, CommandStore, IgnoreCooldown, IgnorePermissions, PrefixProvider, Util } from "../../..";
-import { Context } from "./Context";
 import { MethodNotImplementedError } from "@ayanaware/errors";
-import type { Permission } from "eris";
 import { Message } from "eris";
-import type { ArgumentOptions, DefaultArgumentOptions } from "./argument/Types";
+import type { Permission } from "eris";
+import { Argument, CommandStore, IgnoreCooldown, IgnorePermissions, PrefixProvider, Util } from "../../..";
+import { Component, ComponentOptions } from "../Base";
 import { ArgumentGenerator, ArgumentRunner } from "./argument/ArgumentRunner";
 import { ContentParser } from "./argument/ContentParser";
+import type { ArgumentOptions, DefaultArgumentOptions } from "./argument/Types";
+import { Context } from "./Context";
 
 export type CooldownType = "author" | "channel";
 export type Restrictions = "owner" | "guildOwner";
@@ -16,7 +16,10 @@ export type Before = (ctx: Context) => boolean | Promise<boolean>;
 export type KeySupplier = (ctx: Context, args?: any) => string;
 export type ExecutionPredicate = (ctx: Context) => boolean;
 
-export type TFunction<T = string> = (path: string, data: Record<string, any>) => T;
+export type TFunction<T = string> = (
+  path: string,
+  data: Record<string, any>
+) => T;
 export type GetTranslation<T = string> = (t: TFunction<T>) => T;
 
 export interface CommandDescription {
@@ -94,7 +97,7 @@ export interface CommandOptions extends ComponentOptions {
   /**
    * Whether this command is guarded or not.
    */
-  guarded?: boolean
+  guarded?: boolean;
   /**
    * User ID(s) or a function that will be ignored when checking permissions.
    */
@@ -204,7 +207,7 @@ export class Command extends Component {
    * Whether this command is guarded or not.
    * @since 1.0.0
    */
-  public guarded: boolean
+  public guarded: boolean;
   /**
    * Specific prefixes for this command.
    * @since 1.0.0
@@ -214,7 +217,7 @@ export class Command extends Component {
    * Default argument options for this command.
    * @since 1.0.0
    */
-  public argumentDefaults: DefaultArgumentOptions
+  public argumentDefaults: DefaultArgumentOptions;
   /**
    * A method that gets called right before the command gets ran.
    * @since 1.0.0
@@ -243,7 +246,12 @@ export class Command extends Component {
    * @param file The path to this command.
    * @param options Options to use.
    */
-  public constructor(store: CommandStore, dir: string, file: string[], options: CommandOptions = {}) {
+  public constructor(
+    store: CommandStore,
+    dir: string,
+    file: string[],
+    options: CommandOptions = {}
+  ) {
     super(store, dir, file, options);
 
     options = Util.deepAssign({ args: [] }, options);
@@ -256,15 +264,17 @@ export class Command extends Component {
       flagWords,
       optionFlagWords,
       quoted: options.quoted ?? true,
-      separator: options.separator
+      separator: options.separator,
     });
 
     this.#argumentGenerator = Array.isArray(options.args)
-      ? ArgumentRunner.fromArguments(options.args!.map((arg) => [ arg.id!, new Argument(this, arg) ]))
+      ? ArgumentRunner.fromArguments(
+          options.args!.map((arg) => [arg.id!, new Argument(this, arg)])
+        )
       : options.args!.bind(this);
 
-    this.argumentDefaults = options.argumentDefaults ?? {}
-    this.aliases = [ ...(options.aliases ?? []), this.name ];
+    this.argumentDefaults = options.argumentDefaults ?? {};
+    this.aliases = [...(options.aliases ?? []), this.name];
     this.editable = options.editable ?? true;
     this.bucket = options.bucket ?? 1;
     this.cooldown = options.cooldown ?? 5000;
@@ -276,24 +286,20 @@ export class Command extends Component {
       : [];
     this.channel = options.channel
       ? Util.array(options.channel)
-      : [ "dm", "text" ];
+      : ["dm", "text"];
     this.userPermissions = options.userPermissions
       ? Util.array(options.userPermissions)
       : [];
     this.permissions = options.permissions
       ? Util.array(options.permissions)
       : [];
-    this.inhibitors = options.inhibitors
-      ? Util.array(options.inhibitors)
-      : [];
-    this.before = options.before
-      ? options.before.bind(this)
-      : () => true;
+    this.inhibitors = options.inhibitors ? Util.array(options.inhibitors) : [];
+    this.before = options.before ? options.before.bind(this) : () => true;
     this.description = options.description
       ? typeof options.description === "function"
         ? options.description.bind(this)
         : options.description
-      : { content: "", usage: "" }
+      : { content: "", usage: "" };
     this.prefix = options.prefixes
       ? typeof options.prefixes === "function"
         ? options.prefixes.bind(this)
@@ -310,7 +316,6 @@ export class Command extends Component {
 
     this.lock = options.lock as KeySupplier;
 
-
     if (typeof options.lock === "string") {
       this.lock = ({
         guild: (ctx) => ctx.guild && ctx.guild.id,
@@ -325,7 +330,7 @@ export class Command extends Component {
    * @since 1.0.0
    */
   public get userPermissionsBytecode(): number {
-    return this.userPermissions.reduce((acc, perm) => acc |= perm.allow, 0);
+    return this.userPermissions.reduce((acc, perm) => (acc |= perm.allow), 0);
   }
 
   /**
@@ -333,7 +338,7 @@ export class Command extends Component {
    * @since 1.0.0
    */
   public get permissionsBytecode(): number {
-    return this.permissions.reduce((acc, perm) => acc |= perm.allow, 0);
+    return this.permissions.reduce((acc, perm) => (acc |= perm.allow), 0);
   }
 
   /**
@@ -341,7 +346,9 @@ export class Command extends Component {
    * @param options The options to use when creating this command.
    * @constructor
    */
-  public static Setup(options: CommandOptions = {}): <T extends new (...args: any[]) => Component>(t: T) => T {
+  public static Setup(
+    options: CommandOptions = {}
+  ): <T extends new (...args: any[]) => Component>(t: T) => T {
     return Component.Setup(options);
   }
 
@@ -350,7 +357,7 @@ export class Command extends Component {
    * @param ctx The message context for this execution.
    * @param args The parsed arguments.
    */
-  public run(ctx: Context, args?: Record<string, any>): any | Promise<any> {
+  public run(): any | Promise<any> {
     throw new MethodNotImplementedError();
   }
 
