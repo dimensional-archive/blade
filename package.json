@@ -1,6 +1,6 @@
 {
   "name": "@kyu/blade",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "dist/index.js",
   "types": "typings/index.d.ts",
   "repository": "git@github.com:LolWastedJS/Kyu.git",
