@@ -1,6 +1,6 @@
 import { Client, ClientOptions, Constants, Member, OAuthApplicationInfo, Permission, User } from "eris";
 import { Store } from "./structures/base/Store";
-import { Part } from "./structures/base/Component";
+import { Part } from "./structures/base/Part";
 import { dirname } from "path";
 import { ClientUtil } from "./util/ClientUtil";
 import { CommandStore, LanguageHelper, LanguageHelperOptions, Collection } from ".";

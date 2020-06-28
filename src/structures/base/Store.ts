@@ -2,7 +2,7 @@ import { ParseError } from "@ayanaware/errors";
 import { join, relative, sep } from "path";
 import { LiteEmitter } from "../../util/LiteEmitter";
 import { Util } from "../../util/Util";
-import { Part, PartOptions } from "./Component";
+import { Part, PartOptions } from "./Part";
 import { Collection } from "../../util/Storage";
 
 import type { BladeClient } from "../../Client";

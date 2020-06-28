@@ -1,4 +1,4 @@
-import { Part, PartOptions } from "./base/Component";
+import { Part, PartOptions } from "./base/Part";
 
 import type { InhibitorStore } from "./InhibitorStore";
 

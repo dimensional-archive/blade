@@ -1,4 +1,4 @@
-import { PartOptions, Part } from "./base/Component";
+import { PartOptions, Part } from "./base/Part";
 import { Permission, Message } from "eris";
 import { Util } from "../util";
 import { ArgumentOptions, ArgumentGenerator, DefaultArgumentOptions, ContentParser, ArgumentRunner, Argument, Context } from "../command";

@@ -1,4 +1,4 @@
-import { Part, PartOptions } from "./base/Component";
+import { Part, PartOptions } from "./base/Part";
 import { ExtendableStore } from "./ExtendableStore";
 
 export type Constructor<T = unknown> = new (...args: readonly unknown[]) => T;

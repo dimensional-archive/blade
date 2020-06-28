@@ -1,7 +1,7 @@
 import { Logger } from "@ayanaware/logger";
 import { BladeClient } from "../Client";
 import { Language } from "../structures/Language";
-import { PartOptions, Part } from "../structures/base/Component";
+import { PartOptions, Part } from "../structures/base/Part";
 
 export class Namespace {
   /**
