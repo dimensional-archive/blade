@@ -1,4 +1,4 @@
-import { EmbedOptions } from "eris";
+import { EmbedOptions } from "@kyu/eris";
 
 export interface Embed {
   title?: string;

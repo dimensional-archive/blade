@@ -1,4 +1,4 @@
-import { Client, ClientOptions, Constants, Member, OAuthApplicationInfo, Permission, User } from "eris";
+import { Client, ClientOptions, Constants, Member, OAuthApplicationInfo, Permission, User } from "@kyu/eris";
 import { ComponentStore } from "./stores/Base";
 import { Component } from "./components/Base";
 import { dirname } from "path";
@@ -72,10 +72,10 @@ export class BladeClient extends Client {
   public constructor(options: BladeClientOptions) {
     super(options.token, options);
 
-    this.languages = new LanguageHelper(this, options.language);
     this.logger = Logger.custom("blade", "@kyu", "");
     this.util = new ClientUtil()
     this.directory = options.directory ?? dirname(require.main!.filename);
+    this.languages = new LanguageHelper(this, options.language);
     this.started = false;
   }
 

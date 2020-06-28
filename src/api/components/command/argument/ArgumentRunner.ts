@@ -3,7 +3,7 @@ import { Flag } from "./Flag";
 import { ArgumentOptions } from "./Types";
 import { ContentParserResult } from "./ContentParser";
 import { Context } from "../Context";
-import { Message } from "eris";
+import { Message } from "@kyu/eris";
 import { ArgumentMatches } from "../../../../utils/Constants";
 import { IllegalArgumentError } from "@ayanaware/errors";
 import { Argument } from "./Argument";

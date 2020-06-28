@@ -1,4 +1,4 @@
-import { EmbedOptions, Message, MessageContent, MessageFile, TextableChannel } from "eris";
+import { EmbedOptions, Message, MessageContent, MessageFile, TextableChannel } from "@kyu/eris";
 import { Context } from "./Context";
 import { EmbedBuilder } from "../../..";
 

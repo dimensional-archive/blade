@@ -1,6 +1,6 @@
 import { IllegalStateError } from "@ayanaware/errors";
-import { Constants } from "eris";
-import type { Channel, Message, User } from "eris";
+import { Constants } from "@kyu/eris";
+import type { Channel, Message, User } from "@kyu/eris";
 import { Context, ContextData, InhibitorStore, Language, ListenerStore, MonitorStore, Storage, TypeResolver, Util } from "../..";
 import { Permissions } from "../../utils/Permissions";
 import type { BladeClient } from "../Client";

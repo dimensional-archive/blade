@@ -9,7 +9,7 @@ import {
   TextChannel,
   User,
   VoiceChannel,
-} from "eris";
+} from "@kyu/eris";
 import { Storage } from "..";
 import { MessageCollector, MessageCollectorOptions } from "./collectors/MessageCollector";
 

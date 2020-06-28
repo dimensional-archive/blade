@@ -1,7 +1,6 @@
 import { ReplyBuilder } from "./ReplyBuilder";
 
-import type { Message, MessageContent, TextableChannel, User } from "eris";
-import { Guild, Member, TextChannel } from "eris";
+import type { Message, MessageContent, TextableChannel, User, Guild, Member, TextChannel } from "@kyu/eris";
 import type { Command } from "./Command";
 import type { BladeClient } from "../../Client";
 import type { CommandStore } from "../../..";

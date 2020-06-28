@@ -2,7 +2,7 @@
  * Options for a MessageCollector.
  * @since 0.0.1
  */
-import { Message, PrivateChannel, TextableChannel } from "eris";
+import { Message, PrivateChannel, TextableChannel } from "@kyu/eris";
 import { Storage } from "../Storage";
 import { Collector } from "./Collector";
 import { MessageIterator } from "./iterators/Message";

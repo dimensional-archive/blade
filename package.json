@@ -18,8 +18,7 @@
     "@ayanaware/logger": "^2.2.1",
     "@klasa/event-iterator": "^0.0.10",
     "@klasa/timer-manager": "^0.0.1",
-    "@kyu/blade": "kyudiscord/blade",
-    "eris": "^0.13.1"
+    "@kyu/eris": "github:kyudiscord/eris"
   },
   "devDependencies": {
     "@types/node": "^14.0.13",

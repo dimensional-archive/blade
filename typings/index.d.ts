@@ -9,8 +9,8 @@
 import { GenericError } from "@ayanaware/errors";
 import { Logger } from "@ayanaware/logger";
 import { EventIterator, EventIteratorOptions } from "@klasa/event-iterator";
-import { Base, Client, ClientOptions, Collection, EmbedOptions, Emoji, Guild, GuildChannel, Member, Message, MessageContent, MessageFile, OAuthApplicationInfo, PrivateChannel, Role, TextChannel, VoiceChannel } from "eris";
-import type { Permission, TextableChannel, User } from "eris";
+import { Base, Client, ClientOptions, Collection, EmbedOptions, Emoji, Guild, GuildChannel, Member, Message, MessageContent, MessageFile, OAuthApplicationInfo, PrivateChannel, Role, TextChannel, VoiceChannel } from "@kyu/eris";
+import type { Permission, TextableChannel, User } from "@kyu/eris";
 import type { EventEmitter } from "events";
 
 declare module "@kyu/blade" {
@@ -295,8 +295,8 @@ declare module "@kyu/blade" {
   export class ArgumentRunner {
     command: Command;
     constructor(command: Command);
-    get client(): import("../../..").BladeClient;
-    get handler(): import("../../..").CommandStore;
+    get client(): BladeClient;
+    get handler(): CommandStore;
     run(
       message: Message,
       parsed: ContentParserResult,

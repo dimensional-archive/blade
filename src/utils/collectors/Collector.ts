@@ -1,7 +1,7 @@
 
 import type { EventIterator } from '@klasa/event-iterator';
 import { Storage } from "../Storage";
-import { Base } from "eris";
+import { Base } from "@kyu/eris";
 
 /**
  * The base structure collector for asynchronously collecting values.

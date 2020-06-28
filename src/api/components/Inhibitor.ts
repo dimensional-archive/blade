@@ -1,8 +1,6 @@
 import { Component, ComponentOptions } from "./Base";
 
 import type { InhibitorStore } from "../stores/Inhibitor";
-import { Message } from "eris";
-import { Command } from "./command/Command";
 
 export type InhibitorType = "all" | "pre" | "post" | "command";
 

@@ -1,6 +1,5 @@
 import { MethodNotImplementedError } from "@ayanaware/errors";
-import { Message } from "eris";
-import type { Permission } from "eris";
+import type { Permission, Message } from "@kyu/eris";
 import { Argument, CommandStore, IgnoreCooldown, IgnorePermissions, PrefixProvider, Util } from "../../..";
 import { Component, ComponentOptions } from "../Base";
 import { ArgumentGenerator, ArgumentRunner } from "./argument/ArgumentRunner";
@@ -16,10 +15,7 @@ export type Before = (ctx: Context) => boolean | Promise<boolean>;
 export type KeySupplier = (ctx: Context, args?: any) => string;
 export type ExecutionPredicate = (ctx: Context) => boolean;
 
-export type TFunction<T = string> = (
-  path: string,
-  data: Record<string, any>
-) => T;
+export type TFunction<T = string> = (path: string, data?: Record<string, any>) => T;
 export type GetTranslation<T = string> = (t: TFunction<T>) => T;
 
 export interface CommandDescription {
@@ -350,15 +346,6 @@ export class Command extends Component {
     options: CommandOptions = {}
   ): <T extends new (...args: any[]) => Component>(t: T) => T {
     return Component.Setup(options);
-  }
-
-  /**
-   * Executes this command.
-   * @param ctx The message context for this execution.
-   * @param args The parsed arguments.
-   */
-  public run(): any | Promise<any> {
-    throw new MethodNotImplementedError();
   }
 
   /**

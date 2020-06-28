@@ -1,4 +1,4 @@
-import { Message } from "eris";
+import { Message } from "@kyu/eris";
 
 export class Flag {
   command?: string;

@@ -18,7 +18,7 @@ import type { BladeClient } from "../../../Client";
 import { CommandStore, EmbedBuilder, Util } from "../../../..";
 import { Flag } from "./Flag";
 
-import type { Message, MessageContent } from "eris";
+import type { Message, MessageContent } from "@kyu/eris";
 import { Components } from "../../../Components";
 
 export class Argument {

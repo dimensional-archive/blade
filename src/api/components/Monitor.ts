@@ -2,7 +2,7 @@ import { Component, ComponentOptions } from "./Base";
 import { MethodNotImplementedError } from "@ayanaware/errors";
 
 import type { MonitorStore } from "../stores/Monitor";
-import type { Message } from "eris";
+import type { Message } from "@kyu/eris";
 
 export class Monitor extends Component {
   /**

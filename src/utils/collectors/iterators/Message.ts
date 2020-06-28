@@ -1,5 +1,5 @@
 import { EventIterator, EventIteratorOptions } from '@klasa/event-iterator';
-import { Message, PrivateChannel, TextableChannel } from "eris";
+import { Message, PrivateChannel, TextableChannel } from "@kyu/eris";
 
 export type MessageIteratorOptions = EventIteratorOptions<[ Message ]>;
 

@@ -2,7 +2,7 @@ import { ComponentStore, ComponentStoreOptions } from "./Base";
 import { Inhibitor, InhibitorType } from "../components/Inhibitor";
 
 import type { BladeClient } from "../Client";
-import { Message } from "eris";
+import { Message } from "@kyu/eris";
 import { Command, Util } from "../..";
 
 export class InhibitorStore extends ComponentStore<Inhibitor> {

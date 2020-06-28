@@ -1,5 +1,5 @@
 import { Content, Context } from "../Context";
-import { Message, MessageContent } from "eris";
+import { Message, MessageContent } from "@kyu/eris";
 import { Flag } from "./Flag";
 
 export interface ArgumentOptions {

@@ -2,7 +2,7 @@ import { ArgumentTypeCaster } from "./Types";
 import { BladeClient, CommandStore, InhibitorStore, ListenerStore, MonitorStore, Storage } from "../../../..";
 import { ArgumentTypes } from "../../../../utils/Constants";
 import { URL } from "url";
-import { Constants, Message } from "eris";
+import { Constants, Message } from "@kyu/eris";
 
 export class TypeResolver {
   public client: BladeClient;
@@ -130,14 +130,14 @@ export class TypeResolver {
       [ArgumentTypes.MEMBER]: (message: Message, phrase: any) => {
         console.log("member")
         if (!phrase) return null;
-        return this.client.util.resolveMember(phrase, message.guild.members);
+        return this.client.util.resolveMember(phrase, message.guild!.members);
       },
 
       [ArgumentTypes.MEMBERS]: (message: Message, phrase: any) => {
         if (!phrase) return null;
         const members = this.client.util.resolveMembers(
           phrase,
-          message.guild.members
+          message.guild!.members
         );
         return members.length ? members : null;
       },
@@ -146,7 +146,7 @@ export class TypeResolver {
         if (!phrase) return null;
         return this.client.util.resolveChannel(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
       },
 
@@ -154,7 +154,7 @@ export class TypeResolver {
         if (!phrase) return null;
         const channels = this.client.util.resolveChannels(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         return channels.length ? channels : null;
       },
@@ -164,7 +164,7 @@ export class TypeResolver {
 
         const channel = this.client.util.resolveChannel(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channel || channel.type !== 0) return null;
 
@@ -176,7 +176,7 @@ export class TypeResolver {
 
         const channels = this.client.util.resolveChannels(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channels.length) return null;
 
@@ -189,7 +189,7 @@ export class TypeResolver {
 
         const channel = this.client.util.resolveChannel(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channel || channel.type !== 2) return null;
 
@@ -201,7 +201,7 @@ export class TypeResolver {
 
         const channels = this.client.util.resolveChannels(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channels.length) return null;
 
@@ -214,7 +214,7 @@ export class TypeResolver {
 
         const channel = this.client.util.resolveChannel(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
 
         // @ts-ignore
@@ -228,7 +228,7 @@ export class TypeResolver {
 
         const channels = this.client.util.resolveChannels(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channels.length) return null;
 
@@ -242,7 +242,7 @@ export class TypeResolver {
 
         const channel = this.client.util.resolveChannel(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channel || channel.type !== 5) return null;
 
@@ -254,7 +254,7 @@ export class TypeResolver {
 
         const channels = this.client.util.resolveChannels(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channels.length) return null;
 
@@ -267,7 +267,7 @@ export class TypeResolver {
 
         const channel = this.client.util.resolveChannel(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         // @ts-ignore
         if (!channel || channel.type !== 6) return null;
@@ -280,7 +280,7 @@ export class TypeResolver {
 
         const channels = this.client.util.resolveChannels(
           phrase,
-          message.guild.channels
+          message.guild!.channels
         );
         if (!channels.length) return null;
 
@@ -291,28 +291,28 @@ export class TypeResolver {
 
       [ArgumentTypes.ROLE]: (message: Message, phrase: any) => {
         if (!phrase) return null;
-        return this.client.util.resolveRole(phrase, message.guild.roles);
+        return this.client.util.resolveRole(phrase, message.guild!.roles);
       },
 
       [ArgumentTypes.ROLES]: (message: Message, phrase: any) => {
         if (!phrase) return null;
         const roles = this.client.util.resolveRoles(
           phrase,
-          message.guild.roles
+          message.guild!.roles
         );
         return roles.length ? roles : null;
       },
 
       [ArgumentTypes.EMOJI]: (message: Message, phrase: any) => {
         if (!phrase) return null;
-        return this.client.util.resolveEmoji(phrase, message.guild.emojis);
+        return this.client.util.resolveEmoji(phrase, message.guild!.emojis);
       },
 
       [ArgumentTypes.EMOJIS]: (message: Message, phrase: any) => {
         if (!phrase) return null;
         const emojis = this.client.util.resolveEmojis(
           phrase,
-          message.guild.emojis
+          message.guild!.emojis
         );
         return emojis.length ? emojis : null;
       },
@@ -335,7 +335,7 @@ export class TypeResolver {
 
       [ArgumentTypes.GUILD_MESSAGE]: async (message: Message, phrase: any) => {
         if (!phrase) return null;
-        for (const channel of message.guild.channels.values()) {
+        for (const channel of message.guild!.channels.values()) {
           if (channel.type !== Constants.ChannelTypes.GUILD_TEXT) continue;
           try {
             return await channel.messages.get(phrase);
@@ -355,7 +355,7 @@ export class TypeResolver {
         }
 
         if (message.guild) {
-          for (const channel of message.guild.channels.values()) {
+          for (const channel of message.guild!.channels.values()) {
             if (channel.type !== Constants.ChannelTypes.GUILD_TEXT) continue;
             try {
               return await channel.messages.get(phrase);
@@ -384,28 +384,28 @@ export class TypeResolver {
         if (!phrase) return null;
         const id = phrase.match(/<@!?(\d{17,19})>/);
         if (!id) return null;
-        return message.guild.members.get(id[1]) || null;
+        return message.guild!.members.get(id[1]) || null;
       },
 
       [ArgumentTypes.CHANNEL_MENTION]: (message: Message, phrase: any) => {
         if (!phrase) return null;
         const id = phrase.match(/<#(\d{17,19})>/);
         if (!id) return null;
-        return message.guild.channels.get(id[1]) || null;
+        return message.guild!.channels.get(id[1]) || null;
       },
 
       [ArgumentTypes.ROLE_MENTION]: (message: Message, phrase: any) => {
         if (!phrase) return null;
         const id = phrase.match(/<@&(\d{17,19})>/);
         if (!id) return null;
-        return message.guild.roles.get(id[1]) || null;
+        return message.guild!.roles.get(id[1]) || null;
       },
 
       [ArgumentTypes.EMOJI_MENTION]: (message: Message, phrase: any) => {
         if (!phrase) return null;
         const id = phrase.match(/<a?:[a-zA-Z0-9_]+:(\d{17,19})>/);
         if (!id) return null;
-        return message.guild.emojis.find(e => e.id === id[1]) || null;
+        return message.guild!.emojis.find(e => e.id === id[1]) || null;
       },
 
       [ArgumentTypes.COMMAND_ALIAS]: (message: Message, phrase: any) => {
