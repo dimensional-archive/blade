@@ -1,13 +1,11 @@
 import { Part, PartOptions } from "./base/Part";
-import { MethodNotImplementedError } from "@ayanaware/errors";
+import { Util } from "../util";
 
 import type { SubscriberStore } from "./SubscriberStore";
 import type { EventEmitter } from "events";
 
 export type Emitter = EventEmitter;
-type Fn = (...args: any[]) => any;
-type Mode = "once" | "on";
-type Mappings = Record<string, Fn | string | Subscription>;
+export type SubscriptionType = "once" | "on";
 
 export interface SubscriberOptions extends PartOptions {
   /**
@@ -25,14 +23,12 @@ export interface SubscriberOptions extends PartOptions {
   /**
    * The listener mode.
    */
-  mode?: Mode;
+  type?: SubscriptionType;
 }
 
 export interface Subscription {
-  event: string;
-  fn?: (...args: any) => any;
-  emitter?: string | Emitter;
-  mode?: Mode;
+  fn?: string;
+  type?: SubscriptionType;
 }
 
 /**
@@ -59,12 +55,12 @@ export class Subscriber extends Part {
    * Event mappings for use with multiple events.
    * @since 1.0.0
    */
-  public mappings: Mappings;
+  public mappings: Record<string, string | Subscription>;
   /**
    * The mode of the listener, "on" | "off" | "once"
    * @since 1.0.0
    */
-  public mode: Mode;
+  public type: SubscriptionType;
   /**
    * Map of events.
    * @since 1.0.0
@@ -72,30 +68,32 @@ export class Subscriber extends Part {
    */
   private _listeners: Record<string, (...args: any[]) => any> = {};
 
-
-  public constructor(store: SubscriberStore, dir: string, file: string[], options: SubscriberOptions) {
+  public constructor(
+    store: SubscriberStore,
+    dir: string,
+    file: string[],
+    options: SubscriberOptions
+  ) {
     super(store, dir, file, options);
 
     const emitter = options.emitter ?? "client";
 
     this.event = options.event;
-    this.emitter = typeof emitter === "string" ? store.emitters[emitter] : emitter;
+    this.emitter =
+      typeof emitter === "string" ? store.emitters[emitter] : emitter;
     this.mappings = options.mappings ?? {};
-    this.mode = options.mode ?? "on";
+    this.type = options.type ?? "on";
   }
 
   /**
-   * A typescript helper decorator.
+   * A decorator used for applying subscriber options.
    * @param options The options to use when creating this listener.
    * @constructor
    */
-  public static Setup(options: SubscriberOptions): <T extends new (...args: any[]) => Part>(t: T) => T {
+  public static Setup(
+    options: SubscriberOptions
+  ): <T extends new (...args: any[]) => Part>(t: T) => T {
     return Part.Setup(options);
-  }
-
-
-  public run(...args: any[]): any | Promise<any> {
-    throw new MethodNotImplementedError();
   }
 
   /**
@@ -109,27 +107,30 @@ export class Subscriber extends Part {
         if (this.mappings) {
           const mapping = this.mappings[event];
           if (mapping) {
+            let fn = this["run"];
+            let mode = this.type;
             if (typeof mapping === "object") {
-              const fn = this.getFunction(mapping.fn!),
-                mode = mapping.mode ?? this.mode;
-
-              mapping.emitter
-                ? this.getEmitter(mapping.emitter)[mode](event, (this._listeners[event] = fn))
-                : this.emitter[mode](event, (this._listeners[event] = fn))
+              if (mapping.type) mode = mapping.type;
+              if (mapping.fn) {
+                const _fn = this[mapping.fn];
+                if (_fn) fn = _fn.bind(this);
+              }
             }
 
-            const fn = this.getFunction(mapping as Fn);
+            if (!fn) return;
             this._listeners[event] = fn;
-            return this.emitter[this.mode](event, fn);
+            return this.emitter[mode](event, fn);
           }
 
-          const fn = this[`on${event.slice(0, 1).toUpperCase() + event.substring(1).toLowerCase()}`].bind(this);
+          const fn = this[`on${Util.capitalize(event, false)}`].bind(this);
+          if (!fn) return;
+          
           this._listeners[event] = fn;
-          return this.emitter[this.mode](event, fn);
+          return this.emitter[this.type](event, fn);
         }
       });
     } else {
-      this.emitter[this.mode](this.event, this.run.bind(this));
+      this.emitter[this.type](this.event, this["run"].bind(this));
     }
   }
 
@@ -140,29 +141,11 @@ export class Subscriber extends Part {
    */
   public _unListen(): void {
     if (Array.isArray(this.event)) {
-      this.event.forEach((event) => {
-        if (this.mappings) {
-          const mapping = this.mappings[event];
-          if (mapping && typeof mapping === "object") {
-            return mapping.emitter
-              ? this.getEmitter(mapping.emitter).removeListener(event, this._listeners[event])
-              : this.emitter.removeListener(event, this._listeners[event]);
-          }
-
-          return this.emitter.removeListener(event, this._listeners[event]);
-        }
-      });
+      this.event.forEach((event) =>
+        this.emitter.removeListener(event, this._listeners[event])
+      );
     } else {
-      this.emitter.removeListener(this.event, this.run.bind(this));
+      this.emitter.removeListener(this.event, this["run"].bind(this));
     }
-  }
-
-
-  private getEmitter(v: string | Emitter): Emitter {
-    return typeof v === "string" ? this.store.emitters[v] : v;
-  }
-
-  private getFunction(v: string | Fn): Fn {
-    return (typeof v !== "string" ? v : this[v]).bind(this);
   }
 }

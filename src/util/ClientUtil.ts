@@ -5,15 +5,12 @@ import {
   Message,
   Role,
   TextableChannel,
-  TextChannel,
+  GuildChannel,
   User,
-  VoiceChannel,
   Collection as Col,
 } from "eris";
 import { MessageCollector, MessageCollectorOptions } from "./eris/MessageCollector";
 import { Collection } from "./Storage";
-
-type Channel = TextChannel | VoiceChannel;
 
 export class ClientUtil {
   public resolveUser(
@@ -144,7 +141,7 @@ export class ClientUtil {
     channels: Col<any>,
     caseSensitive = false,
     wholeWord = false
-  ): Channel | undefined {
+  ): GuildChannel | undefined {
     return (
       channels.get(text) ||
       channels.find((channel) =>
@@ -158,7 +155,7 @@ export class ClientUtil {
     channels: Col<any>,
     caseSensitive = false,
     wholeWord = false
-  ): Channel[] {
+  ): GuildChannel[] {
     return channels.filter((channel) =>
       this.checkChannel(text, channel, caseSensitive, wholeWord)
     );
@@ -166,7 +163,7 @@ export class ClientUtil {
 
   public checkChannel(
     text: string,
-    channel: Channel,
+    channel: GuildChannel,
     caseSensitive = false,
     wholeWord = false
   ): boolean {

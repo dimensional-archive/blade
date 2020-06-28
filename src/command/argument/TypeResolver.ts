@@ -218,7 +218,6 @@ export class TypeResolver {
           message.guild!.channels
         );
 
-        // @ts-ignore
         if (!channel || channel.type !== 4) return null;
 
         return channel;
@@ -233,7 +232,6 @@ export class TypeResolver {
         );
         if (!channels.length) return null;
 
-        // @ts-ignore
         const categoryChannels = channels.filter((c) => c.type === 4);
         return categoryChannels.length ? categoryChannels : null;
       },
@@ -270,7 +268,6 @@ export class TypeResolver {
           phrase,
           message.guild!.channels
         );
-        // @ts-ignore
         if (!channel || channel.type !== 6) return null;
 
         return channel;
@@ -285,7 +282,6 @@ export class TypeResolver {
         );
         if (!channels.length) return null;
 
-        // @ts-ignore
         const storeChannels = channels.filter((c) => c.type === 6);
         return storeChannels.length ? storeChannels : null;
       },

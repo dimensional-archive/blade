@@ -56,8 +56,4 @@ export class Inhibitor extends Part {
     this.reason = options.reason ?? this.name;
     this.priority = options.priority ?? 0;
   }
-
-  public run(...args: any[]): boolean | Promise<boolean> {
-    return false;
-  }
 }

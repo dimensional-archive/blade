@@ -20,18 +20,11 @@ export class Monitor extends Part {
     return Part.Setup(options);
   }
 
-  /**
-   * Runs this monitor
-   * @param message
-   */
-  public async run(message: Message): Promise<void> {
-    throw new MethodNotImplementedError();
-  }
-
   async _ran(message: Message): Promise<void> {
     try {
+      if (!this["run"]) throw new MethodNotImplementedError();
       this.store.emit("started", this, message);
-      await this.run(message);
+      await this["run"](message);
       this.store.emit("ran", this, message);
     } catch (e) {
       this.store.emit("error", this, e);
