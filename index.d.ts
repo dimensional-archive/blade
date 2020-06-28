@@ -599,6 +599,7 @@ declare namespace Blade {
     autoCategory?: boolean;
     defaults?: PartOptions;
     createDirectory?: boolean;
+    directory?: string;
   }
   /**
    * A part store.
