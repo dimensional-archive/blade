@@ -1,16 +1,27 @@
 import { ReplyBuilder } from "./ReplyBuilder";
 
-import type { Message, MessageContent, TextableChannel, User, Guild, Member, TextChannel } from "@kyu/eris";
+import type {
+  Message,
+  MessageContent,
+  TextableChannel,
+  User,
+  Guild,
+  Member,
+} from "@kyu/eris";
 import type { Command } from "./Command";
 import type { BladeClient } from "../../Client";
 import type { CommandStore } from "../../..";
+import { TextChannel } from "@kyu/eris";
 import { EmbedBuilder } from "../../..";
 import { Components } from "../../Components";
 
 export type Content =
-  MessageContent
+  | MessageContent
   | EmbedBuilder
-  | ((builder: ReplyBuilder, ctx: Context) => ReplyBuilder | Promise<ReplyBuilder>)
+  | ((
+      builder: ReplyBuilder,
+      ctx: Context
+    ) => ReplyBuilder | Promise<ReplyBuilder>);
 
 export interface ContextData {
   afterPrefix?: string;
@@ -65,9 +76,7 @@ export class Context {
    * @since 1.0.0
    */
   public get member(): Member | undefined {
-    return this.guild
-      ? this.guild.members.get(this.author.id)
-      : undefined;
+    return this.guild ? this.guild.members.get(this.author.id) : undefined;
   }
 
   /**
@@ -83,7 +92,7 @@ export class Context {
    * @since 1.0.0
    */
   public get me(): Member {
-    return this.guild!.members.get(this.client.user.id)!
+    return this.guild!.members.get(this.client.user.id)!;
   }
 
   /**
@@ -92,7 +101,7 @@ export class Context {
    */
   public static async getTransformed(
     context: Context,
-    message: Content,
+    message: Content
   ): Promise<MessageContent> {
     let transformedOptions: MessageContent;
 
@@ -100,11 +109,11 @@ export class Context {
     if (typeof message === "function") {
       const builder = await message(new Builder(context), context);
       transformedOptions = (await builder.build())[0];
-    } else if (message instanceof EmbedBuilder) 
-      transformedOptions = { embed: message.build()! }!
+    } else if (message instanceof EmbedBuilder)
+      transformedOptions = { embed: message.build()! }!;
     else transformedOptions = message;
 
-    return transformedOptions
+    return transformedOptions;
   }
 
   /**
@@ -115,7 +124,11 @@ export class Context {
   public async reply(content: Content): Promise<Message> {
     const transformed = await Context.getTransformed(this, content);
 
-    if (this.shouldEdit && (this.command ? this.command!.editable : true) && !this.lastResponse!.attachments.length) {
+    if (
+      this.shouldEdit &&
+      (this.command ? this.command!.editable : true) &&
+      !this.lastResponse!.attachments.length
+    ) {
       return this.lastResponse!.edit(transformed);
     }
 
@@ -132,7 +145,9 @@ export class Context {
    * @since 1.0.0
    */
   public async sendNew(content: Content): Promise<Message> {
-    const sent = await this.message.channel.createMessage(await Context.getTransformed(this, content));
+    const sent = await this.message.channel.createMessage(
+      await Context.getTransformed(this, content)
+    );
     const lastSent = this.setLastResponse(sent);
 
     this.setEditable(!lastSent.attachments.length);
@@ -146,7 +161,7 @@ export class Context {
    * @since 1.0.0
    */
   public async edit(content: Content): Promise<Message> {
-    const editContent = await Context.getTransformed(this, content)
+    const editContent = await Context.getTransformed(this, content);
     return this.lastResponse!.edit(editContent);
   }
 

@@ -1,4 +1,3 @@
-import { MethodNotImplementedError } from "@ayanaware/errors";
 import type { Permission, Message } from "@kyu/eris";
 import { Argument, CommandStore, IgnoreCooldown, IgnorePermissions, PrefixProvider, Util } from "../../..";
 import { Component, ComponentOptions } from "../Base";

@@ -619,7 +619,7 @@ declare module "@kyu/blade" {
   export type ExecutionPredicate = (ctx: Context) => boolean;
   export type TFunction<T = string> = (
     path: string,
-    data: Record<string, any>
+    data?: Record<string, any>
   ) => T;
   export type GetTranslation<T = string> = (t: TFunction<T>) => T;
   export interface CommandDescription {
@@ -863,12 +863,6 @@ declare module "@kyu/blade" {
     static Setup(
       options?: CommandOptions
     ): <T extends new (...args: any[]) => Component>(t: T) => T;
-    /**
-     * Executes this command.
-     * @param ctx The message context for this execution.
-     * @param args The parsed arguments.
-     */
-    run(): any | Promise<any>;
     /**
      * Parses the arguments of this command.
      * @param message

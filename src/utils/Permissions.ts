@@ -2,43 +2,43 @@
  * Credit goes to: https://github.com/NinoDiscord/Nino/blob/edge/src/util/PermissionUtils.ts
  */
 
-import { Constants, GuildChannel, Member, Permission, Role } from 'eris';
+import { Constants, GuildChannel, Member, Permission, Role } from "@kyu/eris";
 
 const PermissionNames = {
-  'createInstantInvite': 'Create Instant Invite',
-  'kickMembers': 'Kick Members',
-  'banMembers': 'Ban Members',
-  'administrator': 'Administrator',
-  'manageChannels': 'Manage Channels',
-  'manageGuild': 'Manage Server',
-  'addReactions': 'Add Reactions',
-  'viewAuditLogs': 'View Audit Logs',
-  'voicePrioritySpeaker': 'Voice Priority Speaker',
-  'stream': 'Go Live',
-  'readMessages': 'Read Messages',
-  'sendMessages': 'Send Messages',
-  'sendTTSMessages': 'Send Text to Speech Messages',
-  'manageMessages': 'Manage Messages',
-  'embedLinks': 'Embed Links',
-  'attachFiles': 'Attach Files',
-  'readMessageHistory': 'Read Message History',
-  'mentionEveryone': 'Mention Everyone',
-  'externalEmojis': 'External Emojis',
-  'viewGuildAnalytics': 'View Guild Analytics',
-  'voiceConnect': 'Connect to a Voice Channel',
-  'voiceSpeak': 'Speak in a Voice Channel',
-  'voiceMuteMembers': 'Mute Members in a Voice Channel',
-  'voiceDeafenMembers': 'Deafen Members in a Voice Channel',
-  'voiceUseVAD': 'Uses VAD in Voice Channel',
-  'changeNickname': 'Change Nickname',
-  'manageNicknames': 'Manage All Nicknames',
-  'manageRoles': 'Manage Roles',
-  'manageWebhooks': 'Manage Webhooks',
-  'manageEmojis': 'Manage Emojis',
-  'all': 'All Permissions',
-  'allGuild': 'All Guild Permissions',
-  'allText': 'All Text Channel Permissions',
-  'allVoice': 'All Voice Channel Permissions'
+  createInstantInvite: "Create Instant Invite",
+  kickMembers: "Kick Members",
+  banMembers: "Ban Members",
+  administrator: "Administrator",
+  manageChannels: "Manage Channels",
+  manageGuild: "Manage Server",
+  addReactions: "Add Reactions",
+  viewAuditLogs: "View Audit Logs",
+  voicePrioritySpeaker: "Voice Priority Speaker",
+  stream: "Go Live",
+  readMessages: "Read Messages",
+  sendMessages: "Send Messages",
+  sendTTSMessages: "Send Text to Speech Messages",
+  manageMessages: "Manage Messages",
+  embedLinks: "Embed Links",
+  attachFiles: "Attach Files",
+  readMessageHistory: "Read Message History",
+  mentionEveryone: "Mention Everyone",
+  externalEmojis: "External Emojis",
+  viewGuildAnalytics: "View Guild Analytics",
+  voiceConnect: "Connect to a Voice Channel",
+  voiceSpeak: "Speak in a Voice Channel",
+  voiceMuteMembers: "Mute Members in a Voice Channel",
+  voiceDeafenMembers: "Deafen Members in a Voice Channel",
+  voiceUseVAD: "Uses VAD in Voice Channel",
+  changeNickname: "Change Nickname",
+  manageNicknames: "Manage All Nicknames",
+  manageRoles: "Manage Roles",
+  manageWebhooks: "Manage Webhooks",
+  manageEmojis: "Manage Emojis",
+  all: "All Permissions",
+  allGuild: "All Guild Permissions",
+  allText: "All Text Channel Permissions",
+  allVoice: "All Voice Channel Permissions",
 };
 
 /**
@@ -55,7 +55,7 @@ export class Permissions {
     if (member === null || !member.roles.length) return undefined;
 
     return member.roles
-      .map(r => member.guild.roles.get(r))
+      .map((r) => member.guild.roles.get(r))
       .sort((a, b) => b!.position - a!.position)[0];
   }
 
@@ -76,16 +76,19 @@ export class Permissions {
    */
   public static permissionsOf(role: Role, channel: GuildChannel): number {
     let permission = role.permissions.allow;
-    if (permission & Constants.Permissions.administrator) return Constants.Permissions.all;
+    if (permission & Constants.Permissions.administrator)
+      return Constants.Permissions.all;
 
     let overwrite = channel.permissionOverwrites.get(channel.guild.id);
-    if (overwrite) permission = (permission & ~overwrite.deny) | overwrite.allow;
+    if (overwrite)
+      permission = (permission & ~overwrite.deny) | overwrite.allow;
 
-    let deny = 0, allow = 0;
+    let deny = 0,
+      allow = 0;
 
     const roles = channel.guild.roles
-      .filter(r => r.position <= role.position)
-      .map(r => r.id);
+      .filter((r) => r.position <= role.position)
+      .map((r) => r.id);
 
     for (const roleID of roles) {
       if ((overwrite = channel.permissionOverwrites.get(roleID))) {
@@ -105,8 +108,8 @@ export class Permissions {
    */
   public static toString(permission: number): string {
     const perm = new Permission(permission, 0).json;
-    const perms: string[] = Object.keys(perm).map(p => PermissionNames[p]);
-    return perms.join(', ');
+    const perms: string[] = Object.keys(perm).map((p) => PermissionNames[p]);
+    return perms.join(", ");
   }
 
   /**
@@ -122,6 +125,6 @@ export class Permissions {
   }
 
   public static add(...a: number[]): number {
-    return a.reduce((a, n) => a |= n, 0);
+    return a.reduce((a, n) => (a |= n), 0);
   }
 }
