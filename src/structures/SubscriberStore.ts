@@ -11,7 +11,7 @@ export class SubscriberStore extends Store<Subscriber> {
   public emitters: Record<string, Emitter>;
 
   constructor(client: BladeClient, options: SubscriberStoreOptions = {}) {
-    super(client, "events", {
+    super(client, "subscribers", {
       classToHandle: Subscriber,
       ...options
     });
