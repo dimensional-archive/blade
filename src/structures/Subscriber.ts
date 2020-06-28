@@ -3,9 +3,8 @@ import { MethodNotImplementedError } from "@ayanaware/errors";
 
 import type { SubscriberStore } from "./SubscriberStore";
 import type { EventEmitter } from "events";
-import type { LiteEmitter } from "..";
 
-export type Emitter = EventEmitter | LiteEmitter;
+export type Emitter = EventEmitter;
 type Fn = (...args: any[]) => any;
 type Mode = "once" | "on";
 type Mappings = Record<string, Fn | string | Subscription>;

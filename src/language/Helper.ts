@@ -1,9 +1,10 @@
-import { LiteEmitter, Collection, Util } from "../util";
+import { Collection, Util } from "../util";
 import { Language, Metadata } from "../structures/Language";
 import { lstatSync, readdirSync, readFileSync } from "fs";
 import { join, relative, sep } from "path";
 import { BladeClient } from "../Client";
 import { IllegalArgumentError, ParseError } from "@ayanaware/errors";
+import { EventEmitter } from "events";
 
 export type Parser = (...args: any[]) => any;
 
@@ -14,7 +15,7 @@ export interface LanguageHelperOptions {
   fallbackLang?: string
 }
 
-export class LanguageHelper extends LiteEmitter {
+export class LanguageHelper extends EventEmitter {
   /**
    * The client that is using this store.
    * @since 1.0.5

@@ -1,12 +1,12 @@
 import { ParseError } from "@ayanaware/errors";
 import { join, relative, sep } from "path";
-import { LiteEmitter } from "../../util/LiteEmitter";
 import { Util } from "../../util/Util";
 import { Part, PartOptions } from "./Part";
 import { Collection } from "../../util/Storage";
 
 import type { BladeClient } from "../../Client";
 import { mkdir } from "fs";
+import { EventEmitter } from "events";
 
 export type LoadFilter = (file: string) => boolean | Promise<boolean>;
 export type ComponentResolvable<T> = string | T;
@@ -25,7 +25,7 @@ export interface StoreOptions {
  * A part store.
  * @since 1.0.0
  */
-export abstract class Store<T extends Part> extends LiteEmitter {
+export abstract class Store<T extends Part> extends EventEmitter {
   private static _defaults: StoreOptions = {
     priority: -1,
     classToHandle: Part,

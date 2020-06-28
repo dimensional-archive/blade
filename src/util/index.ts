@@ -9,6 +9,5 @@ export * from "./ratelimit/RatelimitManager";
 
 export * from "./ClientUtil";
 export * from "./Constants";
-export * from "./LiteEmitter";
 export * from "./Storage";
 export * from "./Util";

@@ -1,6 +1,10 @@
 src/
-.gitignore
-*.lock
-tsconfig.json
-.eslintrc.js
 test/
+node_modules/
+dist/*.d.ts
+
+tsconfig.json
+yarn.lock
+
+.gitignore
+.eslintrc.js

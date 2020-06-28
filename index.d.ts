@@ -6,7 +6,6 @@
 //   ../@klasa/event-iterator
 //   ../@ayanaware/errors
 
-import type { GenericError } from "@ayanaware/errors";
 import type { Logger } from "@ayanaware/logger";
 import type { EventIterator, EventIteratorOptions } from "@klasa/event-iterator";
 import type { Base, Client, ClientOptions, Collection as Col, EmbedOptions, Emoji, Guild, GuildChannel, Member, Message, MessageContent, OAuthApplicationInfo, Permission, PrivateChannel, Role, TextableChannel, TextChannel, User, VoiceChannel, MessageFile } from "eris";
@@ -607,7 +606,7 @@ declare namespace Blade {
    * A part store.
    * @since 1.0.0
    */
-  export abstract class Store<T extends Part> extends LiteEmitter {
+  export abstract class Store<T extends Part> extends EventEmitter {
     /**
      * The client that is using this store.
      * @since 1.0.0
@@ -910,7 +909,6 @@ declare namespace Blade {
       options: MessageCollectorOptions
     ): Promise<Collection<string, Message>>;
   }
-  export {};
 
   export type Parser = (...args: any[]) => any;
   export interface LanguageHelperOptions {
@@ -919,7 +917,7 @@ declare namespace Blade {
     parse?: Parser;
     fallbackLang?: string;
   }
-  export class LanguageHelper extends LiteEmitter {
+  export class LanguageHelper extends EventEmitter {
     /**
      * The client that is using this store.
      * @since 1.0.5
@@ -1154,7 +1152,6 @@ declare namespace Blade {
    * @since 1.0.0
    */
   export class Command extends Part {
-    #private;
     readonly locker: Set<KeySupplier>;
     /**
      * The command store.
@@ -1627,7 +1624,7 @@ declare namespace Blade {
     ): Promise<string | null>;
   }
 
-  export type Emitter = EventEmitter | LiteEmitter;
+  export type Emitter = EventEmitter;
   type Fn = (...args: any[]) => any;
   type Mode = "once" | "on";
   type Mappings = Record<string, Fn | string | Subscription>;
@@ -1712,11 +1709,11 @@ declare namespace Blade {
      */
     _unListen(): void;
   }
-  export {};
 
   export interface SubscriberStoreOptions extends StoreOptions {
     emitters?: Record<string, Emitter>;
   }
+
   export class SubscriberStore extends Store<Subscriber> {
     emitters: Record<string, Emitter>;
     constructor(client: BladeClient, options?: SubscriberStoreOptions);
@@ -1762,7 +1759,7 @@ declare namespace Blade {
      * The emitter that contains all of the monitor runners.
      * @since 1.0.0
      */
-    emitter: LiteEmitter;
+    emitter: EventEmitter;
     /**
      * Creates a new Monitor Store
      * @param client The client that is using this command store.
@@ -1879,7 +1876,6 @@ declare namespace Blade {
     R extends [T, ...unknown[]],
     I extends EventIterator<R>
   > {
-    #private;
     /**
      * The collected values.
      * @since 0.0.1
@@ -2205,55 +2201,6 @@ declare namespace Blade {
     INHIBITOR = "inhibitor",
     LISTENER = "listener",
   }
-
-  type LiteEmitterHandler = (...args: Array<any>) => void;
-  /**
-   * An error that's created whenever a handler has throw an error.
-   */
-  export class LiteEmitterError extends GenericError {}
-  /**
-   * A simplified EventEmitter.
-   * @since 1.0.0
-   */
-  export class LiteEmitter {
-    /**
-     * The amount of handlers for a given event.
-     * @param event The event to get.
-     * @since 1.0.0
-     */
-    handlerCount(event: string): number;
-    /**
-     * Add a handler function for a given event.
-     * @param event The name of the event.
-     * @param fn The handler function.
-     */
-    addListener(event: string, fn: LiteEmitterHandler): this;
-    /**
-     * Remove one or all handler functions for a given event.
-     * @param event The name of the event.
-     * @param fn Optional handler to detach.
-     */
-    removeListener(event: string, fn?: LiteEmitterHandler): this;
-    /**
-     * Add a handler function for a given event.
-     * @param event The name of the event.
-     * @param callback
-     */
-    on(event: string, callback: LiteEmitterHandler): this;
-    /**
-     * Add a handler function for a given event.
-     * @param event The name of the event.
-     * @param callback
-     */
-    once(event: string, callback: LiteEmitterHandler): this;
-    /**
-     * Emit a new event to handlers.
-     * @param event The name of the event.
-     * @param args Event arguments.
-     */
-    emit(event: string, ...args: Array<any>): this;
-  }
-  export {};
 
   /**
    * A storage structure.

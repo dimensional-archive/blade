@@ -1,8 +1,8 @@
 import { Monitor } from "./Monitor";
 import { ComponentResolvable, Store, StoreOptions } from "./base/Store";
-import { LiteEmitter } from "..";
 
 import type { BladeClient } from "../Client";
+import { EventEmitter } from "events";
 
 /**
  * A monitor store that handles loading of monitors.
@@ -12,7 +12,7 @@ export class MonitorStore extends Store<Monitor> {
    * The emitter that contains all of the monitor runners.
    * @since 1.0.0
    */
-  public emitter: LiteEmitter;
+  public emitter: EventEmitter;
 
   /**
    * Creates a new Monitor Store
@@ -25,7 +25,7 @@ export class MonitorStore extends Store<Monitor> {
       classToHandle: Monitor
     });
 
-    this.emitter = new LiteEmitter();
+    this.emitter = new EventEmitter();
     this.client.on("messageCreate", (m) => this.emitter.emit("message", m));
   }
 
