@@ -4,6 +4,7 @@ import { Util } from "../util";
 import { ArgumentOptions, ArgumentGenerator, DefaultArgumentOptions, ContentParser, ArgumentRunner, Argument, Context } from "../command";
 
 import type { IgnorePermissions, IgnoreCooldown, PrefixProvider, CommandStore } from "./CommandStore";
+import { MethodNotImplementedError } from "@ayanaware/errors";
 
 export type CooldownType = "author" | "channel";
 export type Restrictions = "owner" | "guildOwner";
@@ -332,6 +333,16 @@ export class Command extends Part {
    */
   public get permissionsBytecode(): number {
     return this.permissions.reduce((acc, perm) => (acc |= perm.allow), 0);
+  }
+
+  /**
+   * Runs this command.
+   * @param ctx 
+   * @param args 
+   * @since 1.0.0
+   */
+  public async run(ctx: Context, args?: Record<string, any>): Promise<any> {
+    throw new MethodNotImplementedError();
   }
 
   /**

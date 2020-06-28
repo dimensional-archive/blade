@@ -18,7 +18,6 @@ export interface StoreOptions {
   autoCategory?: boolean;
   defaults?: PartOptions;
   createDirectory?: boolean;
-  directory?: string;
 }
 
 /**
@@ -99,7 +98,7 @@ export abstract class Store<T extends Part> extends EventEmitter {
     this.classToHandle = options.classToHandle ?? Part;
     this.loadFilter = options.loadFilter ?? (() => false);
     this.createDirectory = options.createDirectory ?? true;
-    this.directory = options.directory ?? join(client.directory, this.name);
+    this.directory = join(client.directory, this.name);
 
     if (options.defaults) options.classToHandle!.defaults = options.defaults;
     if (client.started) this.loadAll();

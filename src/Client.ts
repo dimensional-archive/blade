@@ -3,7 +3,7 @@ import { Store } from "./structures/base/Store";
 import { Part } from "./structures/base/Part";
 import { dirname } from "path";
 import { ClientUtil } from "./util/ClientUtil";
-import { CommandStore, LanguageHelper, LanguageHelperOptions, Collection } from ".";
+import { CommandStore, LanguageStore, LanguageStoreOptions, Collection } from ".";
 import { Permissions } from "./util/eris/Permissions";
 import { Logger } from "@ayanaware/logger";
 
@@ -11,7 +11,7 @@ export interface BladeOptions extends ClientOptions {
   directory?: string;
   token: string;
   owners?: string | string[];
-  language?: LanguageHelperOptions;
+  language: LanguageStoreOptions;
 }
 
 /**
@@ -25,7 +25,7 @@ export class BladeClient extends Client {
    * This client's language helper.
    * @since 1.0.5
    */
-  public readonly languages: LanguageHelper;
+  public readonly languages: LanguageStore;
   /**
    * This client's logger.
    * @since 1.0.4
@@ -75,7 +75,7 @@ export class BladeClient extends Client {
     this.logger = Logger.custom("blade", "@kyu", "");
     this.util = new ClientUtil()
     this.directory = options.directory ?? dirname(require.main!.filename);
-    this.languages = new LanguageHelper(this, options.language);
+    this.languages = new LanguageStore(this, options.language);
     this.started = false;
   }
 

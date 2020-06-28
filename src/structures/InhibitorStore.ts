@@ -29,7 +29,7 @@ export class InhibitorStore extends Store<Inhibitor> {
 
     for (const inhibitor of inhibitors.values()) {
       promises.push((async () => {
-        let inhibited = inhibitor.run(message, command);
+        let inhibited = inhibitor["run"](message, command);
         if (Util.isPromise(inhibited)) inhibited = await inhibited;
         if (inhibited) return inhibitor;
         return null;

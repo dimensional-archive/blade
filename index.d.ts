@@ -4,11 +4,10 @@
 //   ../@ayanaware/logger
 //   ../events
 //   ../@klasa/event-iterator
-//   ../@ayanaware/errors
 
 import type { Logger } from "@ayanaware/logger";
 import type { EventIterator, EventIteratorOptions } from "@klasa/event-iterator";
-import type { Base, Client, ClientOptions, Collection as Col, EmbedOptions, Emoji, Guild, GuildChannel, Member, Message, MessageContent, OAuthApplicationInfo, Permission, PrivateChannel, Role, TextableChannel, TextChannel, User, VoiceChannel, MessageFile } from "eris";
+import type { Base, Channel, Client, ClientOptions, Collection as Col, EmbedOptions, Emoji, Guild, GuildChannel, Member, Message, MessageContent, MessageFile, OAuthApplicationInfo, Permission, PrivateChannel, Role, TextableChannel, User } from "eris";
 import type { EventEmitter } from "events";
 
 declare namespace Blade {
@@ -16,7 +15,7 @@ declare namespace Blade {
     directory?: string;
     token: string;
     owners?: string | string[];
-    language?: LanguageHelperOptions;
+    language: LanguageStoreOptions;
   }
   /**
    * The base class for creating a bot.
@@ -29,7 +28,7 @@ declare namespace Blade {
      * This client's language helper.
      * @since 1.0.5
      */
-    readonly languages: LanguageHelper;
+    readonly languages: LanguageStore;
     /**
      * This client's logger.
      * @since 1.0.4
@@ -600,7 +599,6 @@ declare namespace Blade {
     autoCategory?: boolean;
     defaults?: PartOptions;
     createDirectory?: boolean;
-    directory?: string;
   }
   /**
    * A part store.
@@ -794,7 +792,6 @@ declare namespace Blade {
     enable(): this;
   }
 
-  type Channel = TextChannel | VoiceChannel;
   export class ClientUtil {
     resolveUser(
       text: string,
@@ -837,16 +834,16 @@ declare namespace Blade {
       channels: Col<any>,
       caseSensitive?: boolean,
       wholeWord?: boolean
-    ): Channel | undefined;
+    ): GuildChannel | undefined;
     resolveChannels(
       text: string,
       channels: Col<any>,
       caseSensitive?: boolean,
       wholeWord?: boolean
-    ): Channel[];
+    ): GuildChannel[];
     checkChannel(
       text: string,
-      channel: Channel,
+      channel: GuildChannel,
       caseSensitive?: boolean,
       wholeWord?: boolean
     ): boolean;
@@ -908,122 +905,6 @@ declare namespace Blade {
       channel: TextableChannel,
       options: MessageCollectorOptions
     ): Promise<Collection<string, Message>>;
-  }
-
-  export type Parser = (...args: any[]) => any;
-  export interface LanguageHelperOptions {
-    createDirectory?: boolean;
-    directory?: string;
-    parse?: Parser;
-    fallbackLang?: string;
-  }
-  export class LanguageHelper extends EventEmitter {
-    /**
-     * The client that is using this store.
-     * @since 1.0.5
-     */
-    readonly client: BladeClient;
-    /**
-     * All of the loaded languages.
-     * @since 1.0.5
-     */
-    readonly storage: Collection<string, Language>;
-    /**
-     * The fallback language in case a language isn't found or a namespace isn't found.
-     * @since 1.0.5
-     */
-    fallbackLang: string;
-    /**
-     * Whether to create the directory if none exists.
-     * @since 1.0.5
-     */
-    createDirectory: boolean;
-    /**
-     * The directory to load from.
-     * @since 1.0.5
-     */
-    directory: string;
-    /**
-     * The parser for metadata files.
-     * @since 1.0.5
-     */
-    parse: Parser;
-    /**
-     * @param client
-     * @param options
-     */
-    constructor(client: BladeClient, options?: LanguageHelperOptions);
-    /**
-     * Load all languages and their namespaces.
-     * @since 1.0.5
-     */
-    loadAll(): Promise<void>;
-    /**
-     * Loads a namespace.
-     * @param language The language that
-     * @param file
-     * @since 1.0.5
-     */
-    load(language: Language, file: string[]): Promise<void>;
-    /**
-     * Get a translation by it's path.
-     * @since 1.0.5
-     */
-    translate<T = string>(
-      lang: string,
-      path: string,
-      data?: Record<string, any>
-    ): T;
-  }
-
-  export class Namespace {
-    /**
-     * This namespaces logger.
-     * @since 1.0.5
-     */
-    readonly logger: Logger;
-    /**
-     * The blade client.
-     * @since 1.0.5
-     */
-    readonly client: BladeClient;
-    /**
-     * The language this namespace belongs to.
-     * @since 1.0.5
-     */
-    readonly language: Language;
-    /**
-     * The file array of this part.
-     * @since 1.0.0
-     */
-    file: string[];
-    /**
-     * The directory that holds this part.
-     * @since 1.0.0
-     */
-    directory: string;
-    /**
-     * THe name of this part
-     * @since 1.0.0
-     */
-    name: string;
-    constructor(
-      language: Language,
-      file: string[],
-      options?: Omit<PartOptions, "category" | "disabled">
-    );
-    /**
-     * The namespace data getter.
-     */
-    get data(): Record<string, any>;
-    /**
-     * A typescript helper decorator.
-     * @param options The options to use when creating this listener.
-     * @constructor
-     */
-    static Setup(
-      options: PartOptions
-    ): <T extends new (...args: any[]) => Part>(t: T) => T;
   }
 
   export type CooldownType = "author" | "channel";
@@ -1152,6 +1033,7 @@ declare namespace Blade {
    * @since 1.0.0
    */
   export class Command extends Part {
+    #private;
     readonly locker: Set<KeySupplier>;
     /**
      * The command store.
@@ -1271,6 +1153,13 @@ declare namespace Blade {
      * @since 1.0.0
      */
     get permissionsBytecode(): number;
+    /**
+     * Runs this command.
+     * @param ctx
+     * @param args
+     * @since 1.0.0
+     */
+    run(ctx: Context, args?: Record<string, any>): Promise<any>;
     /**
      * A typescript helper decorator.
      * @param options The options to use when creating this command.
@@ -1606,7 +1495,13 @@ declare namespace Blade {
       path: string[],
       options?: InhibitorOptions
     );
-    run(...args: any[]): boolean | Promise<boolean>;
+    /**
+     * Runs this command.
+     * @param message
+     * @param command
+     * @since 1.0.0
+     */
+    run(message: Message, command?: Command): Promise<any>;
   }
 
   export class InhibitorStore extends Store<Inhibitor> {
@@ -1624,10 +1519,103 @@ declare namespace Blade {
     ): Promise<string | null>;
   }
 
+  export interface LanguageOptions extends PartOptions {
+    /**
+     * The different aliases of this language.
+     */
+    aliases?: string[];
+    /**
+     * The authors that created this language file.
+     */
+    author?: string | string[];
+  }
+  export class Language extends Part {
+    readonly store: LanguageStore;
+    readonly ns: Map<string, Record<string, any>>;
+    /**
+     * The aliases of this language.
+     * @since 1.0.11
+     */
+    aliases: string[];
+    /**
+     * The authors of this language.
+     * @since 1.0.11
+     */
+    author: string[];
+    /**
+     * @param store
+     * @param dir
+     * @param file
+     * @param options
+     */
+    constructor(
+      store: LanguageStore,
+      dir: string,
+      file: string[],
+      options?: LanguageOptions
+    );
+    /**
+     * Add a namespace to the map of namespaces.
+     * @param ns The namespace to set.
+     * @since 1.0.5
+     */
+    addNamespace(
+      ns: string,
+      data: Record<string, any>
+    ): Map<string, Record<string, any>>;
+    /**
+     * Get a namespace by it's name.
+     * @param ns The namespace to get.
+     * @since 1.0.5
+     */
+    getNamespace(ns: string): Record<string, any> | undefined;
+    /**
+     * Get a translation.
+     * @param path The path to the translation.
+     * @param data Data to use.
+     */
+    translate(path: string, data?: Record<string, any>): any;
+  }
+
+  export interface LanguageStoreOptions extends StoreOptions {
+    /**
+     * An array of namespaces to use.
+     */
+    namespaces: string[];
+    /**
+     * The fallback language.
+     */
+    fallbackLanguage?: string;
+  }
+  export class LanguageStore extends Store<Language> {
+    /**
+     * Namespaces to use.
+     * @since 1.0.11
+     */
+    namespaces: string[];
+    /**
+     * The default language.
+     * @since 1.0.11
+     */
+    fallbackLanguage: string;
+    /**
+     * @param client
+     * @param options
+     */
+    constructor(client: BladeClient, options: LanguageStoreOptions);
+    /**
+     * Get a translation by it's path.
+     * @since 1.0.5
+     */
+    translate<T = string>(
+      lang: string,
+      path: string,
+      data?: Record<string, any>
+    ): T;
+  }
+
   export type Emitter = EventEmitter;
-  type Fn = (...args: any[]) => any;
-  type Mode = "once" | "on";
-  type Mappings = Record<string, Fn | string | Subscription>;
+  export type SubscriptionType = "once" | "on";
   export interface SubscriberOptions extends PartOptions {
     /**
      * The event to listen for.
@@ -1644,13 +1632,11 @@ declare namespace Blade {
     /**
      * The listener mode.
      */
-    mode?: Mode;
+    type?: SubscriptionType;
   }
   export interface Subscription {
-    event: string;
-    fn?: (...args: any) => any;
-    emitter?: string | Emitter;
-    mode?: Mode;
+    fn?: string;
+    type?: SubscriptionType;
   }
   /**
    * An abstract class for adding a listener to an emitter.
@@ -1675,12 +1661,12 @@ declare namespace Blade {
      * Event mappings for use with multiple events.
      * @since 1.0.0
      */
-    mappings: Mappings;
+    mappings: Record<string, string | Subscription>;
     /**
      * The mode of the listener, "on" | "off" | "once"
      * @since 1.0.0
      */
-    mode: Mode;
+    type: SubscriptionType;
     constructor(
       store: SubscriberStore,
       dir: string,
@@ -1688,14 +1674,18 @@ declare namespace Blade {
       options: SubscriberOptions
     );
     /**
-     * A typescript helper decorator.
+     * A decorator used for applying subscriber options.
      * @param options The options to use when creating this listener.
      * @constructor
      */
     static Setup(
       options: SubscriberOptions
     ): <T extends new (...args: any[]) => Part>(t: T) => T;
-    run(...args: any[]): any | Promise<any>;
+    /**
+     * Runs this Subscriber.
+     * @since 1.0.0
+     */
+    run(...args: any[]): Promise<any>;
     /**
      * Attaches the proper listener to the emitter
      * @since 1.0.0
@@ -1713,7 +1703,6 @@ declare namespace Blade {
   export interface SubscriberStoreOptions extends StoreOptions {
     emitters?: Record<string, Emitter>;
   }
-
   export class SubscriberStore extends Store<Subscriber> {
     emitters: Record<string, Emitter>;
     constructor(client: BladeClient, options?: SubscriberStoreOptions);
@@ -1744,10 +1733,12 @@ declare namespace Blade {
       options: PartOptions
     ): <T extends new (...args: any[]) => Part>(t: T) => T;
     /**
-     * Runs this monitor
+     * Runs this monitor.
      * @param message
+     * @param command
+     * @since 1.0.0
      */
-    run(message: Message): Promise<void>;
+    run(message: Message): Promise<any>;
     _ran(message: Message): Promise<void>;
   }
 
@@ -1788,67 +1779,6 @@ declare namespace Blade {
     abstract update(id: string, value: any, path?: string): any | Promise<any>;
   }
 
-  export interface Metadata {
-    author?: string | string[];
-    alias?: string | string[];
-    id?: string;
-  }
-  export class Language {
-    /**
-     * The helper that loaded this language.
-     * @since 1.0.5
-     */
-    readonly helper: LanguageHelper;
-    /**
-     * The folder that belongs to this language.
-     * @since 1.0.5
-     */
-    readonly folder: string;
-    /**
-     * The different aliases for this language.
-     * @since 1.0.5
-     */
-    aliases: string[];
-    /**
-     * The author(s) that created this language.
-     * @since 1.0.5
-     */
-    authors: string[];
-    /**
-     * The id of this language.
-     * @since 1.0.5
-     */
-    id: string;
-    /**
-     * @param helper
-     * @param folder
-     * @param metadata
-     */
-    constructor(
-      helper: LanguageHelper,
-      folder: string,
-      { id: _id, author, alias }?: Metadata
-    );
-    /**
-     * Add a namespace to the map of namespaces.
-     * @param ns The namespace to set.
-     * @since 1.0.5
-     */
-    addNamespace(ns: Namespace): Map<string, Namespace>;
-    /**
-     * Get a namespace by it's name.
-     * @param ns The namespace to get.
-     * @since 1.0.5
-     */
-    getNamespace(ns: string): Namespace | undefined;
-    /**
-     * Get a translation.
-     * @param path The path to the translation.
-     * @param data Data to use.
-     */
-    translate(path: string, data?: Record<string, any>): any;
-  }
-
   export type MessageIteratorOptions = EventIteratorOptions<[Message]>;
   /**
    * An asynchronous iterator responsible for iterating over messages.
@@ -1876,6 +1806,7 @@ declare namespace Blade {
     R extends [T, ...unknown[]],
     I extends EventIterator<R>
   > {
+    #private;
     /**
      * The collected values.
      * @since 0.0.1
@@ -2335,6 +2266,7 @@ declare namespace Blade {
     static isFunction(i: any): i is Function;
     static isClass(input: unknown): boolean;
     static isObject(value: any): boolean;
+    static capitalize(str: string, lowerCaseRest?: boolean): string;
     static getPathSegments(path: string): string[];
     static walk(directory: string, files?: string[]): string[];
     static deepAssign<T>(o1: any, ...os: any[]): T;

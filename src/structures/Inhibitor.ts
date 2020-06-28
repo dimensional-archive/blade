@@ -1,6 +1,9 @@
 import { Part, PartOptions } from "./base/Part";
+import { MethodNotImplementedError } from "@ayanaware/errors";
 
 import type { InhibitorStore } from "./InhibitorStore";
+import type { Message } from "eris";
+import type { Command } from "./Command";
 
 export type InhibitorType = "all" | "pre" | "post" | "command";
 
@@ -55,5 +58,15 @@ export class Inhibitor extends Part {
     this.type = options.type ?? "pre";
     this.reason = options.reason ?? this.name;
     this.priority = options.priority ?? 0;
+  }
+
+  /**
+   * Runs this command.
+   * @param message
+   * @param command 
+   * @since 1.0.0
+   */
+  public async run(message: Message, command?: Command): Promise<any> {
+    throw new MethodNotImplementedError();
   }
 }

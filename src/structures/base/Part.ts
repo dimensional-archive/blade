@@ -137,7 +137,7 @@ export abstract class Part {
    * @since 1.0.0
    */
   public unload(): Part | null {
-    if (this.store.handlerCount('compUnloaded')) this.store.emit('compUnloaded', this);
+    if (this.store.listenerCount('compUnloaded')) this.store.emit('compUnloaded', this);
     return this.store.remove(this);
   }
 

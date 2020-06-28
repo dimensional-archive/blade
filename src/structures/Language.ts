@@ -1,70 +1,70 @@
-import { LanguageHelper } from "../language/Helper";
-import { Namespace } from "../language/Namespace";
-import { IllegalArgumentError } from "@ayanaware/errors";
+import { PartOptions, Part } from "./base/Part";
 import { Util } from "../util";
-import { basename } from "path";
+import { IllegalArgumentError } from "@ayanaware/errors";
 
-export interface Metadata {
+import type { LanguageStore } from "./LanguageStore";
+
+export interface LanguageOptions extends PartOptions {
+  /**
+   * The different aliases of this language.
+   */
+  aliases?: string[];
+  /**
+   * The authors that created this language file.
+   */
   author?: string | string[];
-  alias?: string | string[];
-  id?: string;
 }
 
-export class Language {
+export class Language extends Part {
+  public readonly store!: LanguageStore;
+  public readonly ns: Map<string, Record<string, any>>;
+
   /**
-   * The helper that loaded this language.
-   * @since 1.0.5
-   */
-  public readonly helper: LanguageHelper;
-  /**
-   * The folder that belongs to this language.
-   * @since 1.0.5
-   */
-  public readonly folder: string;
-  /**
-   * The different aliases for this language.
-   * @since 1.0.5
+   * The aliases of this language.
+   * @since 1.0.11
    */
   public aliases: string[];
   /**
-   * The author(s) that created this language.
-   * @since 1.0.5
+   * The authors of this language.
+   * @since 1.0.11
    */
-  public authors: string[];
-  /**
-   * The id of this language.
-   * @since 1.0.5
-   */
-  public id: string;
+  public author: string[];
 
   /**
-   * The namespaces that belong to this language.
-   * @since 1.0.5
+   * @param store
+   * @param dir
+   * @param file
+   * @param options
    */
-  private readonly namespaces: Map<string, Namespace>;
+  public constructor(
+    store: LanguageStore,
+    dir: string,
+    file: string[],
+    options: LanguageOptions = {}
+  ) {
+    super(store, dir, file, options);
 
-  /**
-   * @param helper
-   * @param folder
-   * @param metadata
-   */
-  public constructor(helper: LanguageHelper, folder: string, { id: _id, author, alias }: Metadata = {}) {
-    this.helper = helper;
-    this.namespaces = new Map();
-    this.folder = folder;
+    this.aliases = options.aliases ?? [];
+    this.author = options.author ? Util.array(options.author) : [];
 
-    this.id = _id ?? basename(folder);
-    this.authors = author ? Util.array(author) : [];
-    this.aliases = alias ? Util.array(alias) : [];
+    this.ns = new Map();
+    for (const ns of store.namespaces) {
+      const data = this[ns];
+      if (data) this.ns.set(ns, data);
+      else this.store.emit("namespaceMissing", this, ns);
+    }
   }
 
   /**
    * Dot notation shit: https://npmjs.com/package/dot-prop
    * @private
    */
-  private static get(object: Record<string, any>, path: string, value?: any): any {
-    if (!Util.isObject(object))
-      return value === undefined ? object : value;
+  private static get(
+    object: Record<string, any>,
+    path: string,
+    value?: any
+  ): any {
+    if (!Util.isObject(object)) return value === undefined ? object : value;
 
     const pathArray = Util.getPathSegments(path);
     if (pathArray.length === 0) return;
@@ -89,8 +89,11 @@ export class Language {
    * @param ns The namespace to set.
    * @since 1.0.5
    */
-  public addNamespace(ns: Namespace): Map<string, Namespace> {
-    return this.namespaces.set(ns.name, ns);
+  public addNamespace(
+    ns: string,
+    data: Record<string, any>
+  ): Map<string, Record<string, any>> {
+    return this.ns.set(ns, data);
   }
 
   /**
@@ -98,8 +101,8 @@ export class Language {
    * @param ns The namespace to get.
    * @since 1.0.5
    */
-  public getNamespace(ns: string): Namespace | undefined {
-    return this.namespaces.get(ns)
+  public getNamespace(ns: string): Record<string, any> | undefined {
+    return this.ns.get(ns);
   }
 
   /**
@@ -110,13 +113,15 @@ export class Language {
   public translate(path: string, data: Record<string, any> = {}): any {
     const regExp = /^(\w+):([\w_.]+)$/gi;
     if (!path.match(regExp))
-      throw new IllegalArgumentError(`Path doesn't follow this format: "namespace:path"`);
+      throw new IllegalArgumentError(
+        `Path doesn't follow this format: "namespace:path"`
+      );
 
-    const [ , n, p ] = regExp.exec(path)!;
+    const [, n, p] = regExp.exec(path)!;
 
     let namespace = this.getNamespace(n);
     if (!namespace || !namespace.data) {
-      const en = this.helper.storage.get(this.helper.fallbackLang);
+      const en = this.store.parts.get(this.store.fallbackLanguage);
       namespace = en!.getNamespace(n);
       if (!namespace) return `Incorrect or missing namespace: "${n}"`;
     }
@@ -135,4 +140,3 @@ export class Language {
     return value;
   }
 }
-

@@ -3,6 +3,7 @@ import { Util } from "../util";
 
 import type { SubscriberStore } from "./SubscriberStore";
 import type { EventEmitter } from "events";
+import { MethodNotImplementedError } from "@ayanaware/errors";
 
 export type Emitter = EventEmitter;
 export type SubscriptionType = "once" | "on";
@@ -97,6 +98,14 @@ export class Subscriber extends Part {
   }
 
   /**
+   * Runs this Subscriber.
+   * @since 1.0.0
+   */
+  public async run(...args: any[]): Promise<any> {
+    throw new MethodNotImplementedError();
+  }
+
+  /**
    * Attaches the proper listener to the emitter
    * @since 1.0.0
    * @private
@@ -107,30 +116,30 @@ export class Subscriber extends Part {
         if (this.mappings) {
           const mapping = this.mappings[event];
           if (mapping) {
-            let fn = this["run"];
+            let fn = this.run;
             let mode = this.type;
             if (typeof mapping === "object") {
               if (mapping.type) mode = mapping.type;
               if (mapping.fn) {
                 const _fn = this[mapping.fn];
-                if (_fn) fn = _fn.bind(this);
+                if (_fn) fn = _fn;
               }
             }
 
             if (!fn) return;
-            this._listeners[event] = fn;
-            return this.emitter[mode](event, fn);
+            this._listeners[event] = fn.bind(this);
+            return this.emitter[mode](event, fn.bind(this));
           }
 
-          const fn = this[`on${Util.capitalize(event, false)}`].bind(this);
+          const fn = this[`on${Util.capitalize(event, false)}`];
           if (!fn) return;
           
-          this._listeners[event] = fn;
-          return this.emitter[this.type](event, fn);
+          this._listeners[event] = fn.bind(this);
+          return this.emitter[this.type](event, fn.bind(this));
         }
       });
     } else {
-      this.emitter[this.type](this.event, this["run"].bind(this));
+      this.emitter[this.type](this.event, this.run.bind(this));
     }
   }
 
@@ -142,10 +151,10 @@ export class Subscriber extends Part {
   public _unListen(): void {
     if (Array.isArray(this.event)) {
       this.event.forEach((event) =>
-        this.emitter.removeListener(event, this._listeners[event])
+        this.emitter.removeListener(event, this._listeners[event].bind(this))
       );
     } else {
-      this.emitter.removeListener(this.event, this["run"].bind(this));
+      this.emitter.removeListener(this.event, this.run.bind(this));
     }
   }
 }

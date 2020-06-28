@@ -5,7 +5,6 @@ export * from "./Client";
 export * from "./Structures";
 
 export * from "./command";
-export * from "./language";
 export * from "./structures";
 export * from "./util";
 
