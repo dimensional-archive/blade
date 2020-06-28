@@ -1,24 +1,25 @@
-import { TextChannel, Structures, Guild, Textable } from "@kyu/eris";
-import { Context } from "./api/components/command";
+import { TextChannel, Message, Guild as ErisGuild } from "eris";
+import { Context } from "./command";
 
-declare module "@kyu/eris" {
+export * from "./Client";
+export * from "./Structures";
+
+export * from "./command";
+export * from "./language";
+export * from "./structures";
+export * from "./util";
+
+declare module "eris" {
   interface Message {
-    guild: Guild;
+    guild: ErisGuild;
     ctx: Context;
   }
 }
 
-Structures.extend(
-  "Message",
-  (Message) =>
-    class KyuMessage<T extends Textable> extends Message<T> {
-      get guild(): Guild {
-        return (this.channel instanceof TextChannel
-          ? this.channel.guild
-          : undefined)!;
-      }
-    }
-);
-
-export * from "./api";
-export * from "./utils";
+Object.defineProperty(Message.prototype, "guild", {
+  get() {
+    return (this.channel instanceof TextChannel
+      ? this.channel.guild
+      : undefined)!;
+  }
+})
