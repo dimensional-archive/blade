@@ -1,6 +1,6 @@
 {
   "name": "@kyudiscord/blade",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A powerful bot framework for the Neo Discord Library.",
   "main": "dist/index.js",
   "repository": "https://github.com/kyudiscord/neo",

@@ -32,7 +32,7 @@ export class ListenerHandler extends blade.get("Handler")<Listener> {
    */
   public add(module: Listener, reload = false): Listener | null {
     const listener = super.add(module, reload);
-    if (listener) return listener._unListen()._listen();
+    if (listener) return listener._listen();
     return null;
   }
 
