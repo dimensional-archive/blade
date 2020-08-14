@@ -1,3 +1,4 @@
+import "./util/Extender";
 import type { Context } from "./components/command/context/Context";
 
 export * from "./components/base/Module";

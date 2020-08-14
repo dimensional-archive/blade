@@ -91,6 +91,7 @@ export class Command extends blade.get("Module") {
     this.ignorePermissions = typeof options.ignorePermissions === "function"
       ? options.ignorePermissions.bind(this)
       : options.ignorePermissions ?? [];
+    this.run = this.run.bind(this);
   }
 
   /**

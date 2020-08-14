@@ -120,7 +120,7 @@ export class Listener extends blade.get("Module") {
   private wrap(fn: Fn): Fn<Promise<void>> {
     return async (...args: unknown[]) => {
       try {
-        let res = fn(...args);
+        let res = fn.call(this, ...args);
         if (isPromise(res)) res = await res;
         this.handler.emit("listenerRan", this, res);
       } catch (e) {

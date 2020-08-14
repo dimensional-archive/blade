@@ -27,7 +27,7 @@ export class CommandDispatcher {
    * @param options
    */
   public constructor(handler: CommandHandler, public readonly options: DispatcherOptions = {}) {
-    this.options = options = Object.assign(options, {
+    this.options = options = Object.assign({
       contextSweepInterval: 3e5,
       contextLifetime: 3e5,
       prefix: [ "!" ],
@@ -36,7 +36,7 @@ export class CommandDispatcher {
       ignorePermissions: [],
       ignoreRatelimit: [],
       developers: []
-    } as DispatcherOptions);
+    } as DispatcherOptions, options);
 
     this.handler = handler;
     this.client = handler.client;
@@ -210,7 +210,7 @@ export class CommandDispatcher {
           }
 
           command.ratelimits.delete(id);
-        }, expiresAt)
+        }, command.ratelimit.cooldown)
       });
 
       ratelimit = command.ratelimits.get(id)!;

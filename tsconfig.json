@@ -12,7 +12,8 @@
 
     /* Compiling */
     "inlineSourceMap": true,
-    "declaration": true,
+    "declaration": false,
+    "removeComments": true,
     "allowJs": true,
     "rootDir": "./src",
     "outDir": "./dist",
