@@ -1,0 +1,44 @@
+{
+  "exclude": ["./node_modules", "./dist"],
+  "include": [
+    "./src/**/*"
+  ],
+  "compilerOptions": {
+    /* Basic */
+    "lib": ["ES2020"],
+    "target": "ES2020",
+    "module": "CommonJS",
+    "skipLibCheck": true,
+
+    /* Compiling */
+    "inlineSourceMap": true,
+    "declaration": true,
+    "allowJs": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": "./src",
+
+    /* Strict Options */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "pretty": true,
+    "experimentalDecorators": true,
+    "importsNotUsedAsValues": "error",
+
+    /* Types */
+    "types": ["node"],
+    "forceConsistentCasingInFileNames": true,
+
+    /* Module Resolution */
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  }
+}
