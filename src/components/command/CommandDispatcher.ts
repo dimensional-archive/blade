@@ -159,7 +159,7 @@ export class CommandDispatcher {
       const parsed = new ContentParser({ optionKeys, flagKeys }).parse(args.join(" "));
 
       for (const flag of parsed.flags) ctx.flags.set(flag.key!, true);
-      params = parsed.phrases;
+      params = parsed.phrases.map(p => p.value!);
     } else params = args;
 
     // Resolve the arguments or if an error is caught emit an event.
