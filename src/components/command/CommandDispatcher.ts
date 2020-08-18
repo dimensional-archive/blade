@@ -1,10 +1,13 @@
-import { Message, Store, Timers } from "@kyudiscord/neo";
+import { GuildChannel, Message, Store, Timers } from "@kyudiscord/neo";
+import { array, blade, isPromise } from "../../util";
+import { ContentParser } from "./parameter/parser/ContentParser";
+import { TypeResolver } from "./parameter/TypeResolver";
 
-import type { CommandHandler } from "./Handler";
+import type { CommandHandler } from "./CommandHandler";
 import type { BladeClient } from "../../Client";
 import type { Command } from "./Command";
 import type { Context } from "./context/Context";
-import { array, blade, isPromise } from "../../util";
+import type { InhibitorHandler } from "../inhibitor/InhibitorHandler";
 
 export class CommandDispatcher {
   /**
@@ -23,6 +26,16 @@ export class CommandDispatcher {
   public readonly contexts: Store<string, Context>;
 
   /**
+   * The type resolver.
+   */
+  public readonly resolver: TypeResolver;
+
+  /**
+   * The inhibitor handler.
+   */
+  public inhibitorHandler?: InhibitorHandler;
+
+  /**
    * @param handler
    * @param options
    */
@@ -38,16 +51,17 @@ export class CommandDispatcher {
       developers: []
     } as DispatcherOptions, options);
 
+    this.resolver = new TypeResolver(handler.client);
     this.handler = handler;
     this.client = handler.client;
     this.contexts = new Store();
+    this.inhibitorHandler = options.inhibitorHandler;
 
     if (options.contextSweepInterval! > 0) this._initContextSweeper();
     if (!options.passive) {
-      this.client.on("messageCreate", (message) => this.handle(message));
-      this.client.on("messageUpdate", (_, message) => this.handle(message));
+      this.client.on("messageCreate", (message) => void this.handle(message));
+      this.client.on("messageUpdate", (_, message) => void this.handle(message));
     }
-
   }
 
   /**
@@ -65,6 +79,16 @@ export class CommandDispatcher {
   }
 
   /**
+   * Use an inhibitor handler when dispatching commands.
+   * @param inhibitorHandler The handler to use.
+   * @since 1.0.3
+   */
+  public useInhibitors(inhibitorHandler: InhibitorHandler): this {
+    this.inhibitorHandler = inhibitorHandler;
+    return this;
+  }
+
+  /**
    * Handles an incoming message.
    * @param message
    */
@@ -79,35 +103,115 @@ export class CommandDispatcher {
 
     message.ctx = ctx;
 
+    // Run all of the "all" type inhibitors.
+    if (!(await this.runAllInhibitors(ctx))) {
+      void this.contexts.delete(message.id);
+      delete message.ctx;
+      return;
+    }
+
+    // Tests whether or not the message content only contains the client mention
     if (this.aloneRegexp.test(message.content)) {
       this.handler.emit("onlyMention", ctx);
       return;
     }
 
+    // Find a prefix.
     let prefix;
     if (this.mentionRegexp.test(message.content)) {
       if (!this.options.mentionPrefix) return;
       const [ _prf ] = this.mentionRegexp.exec(message.content)!;
       prefix = _prf;
-    } else prefix = await this.parsePrefixes(ctx, message.content);
+    } else {
+      let prefixes = typeof this.options.prefix === "function"
+        ? this.options.prefix.apply(this.client, [ ctx ])
+        : array(this.options.prefix!);
+
+      if (isPromise(prefixes)) prefixes = await prefixes;
+      prefixes = array(prefixes);
+
+      for (const prefix1 of prefixes) {
+        const regex = new RegExp(`^${prefix1}`, "i");
+        if (regex.test(message.content)) prefix = prefix1;
+        if (prefix) break;
+      }
+    }
 
     if (!prefix) return;
+    if (!(await this.runPreCommandInhibitors(ctx))) return;
 
-    const [ cmd ] = message.content.slice(prefix.length).trim().split(" ");
+    // Split the message content.
+    const [ cmd, ...args ] = message.content
+      .slice(prefix.length)
+      .trim()
+      .split(" ");
+
     const command = this.findCommand(cmd);
 
+    // Run an incorrect command check and post inhibitors.
     if (!command) return this.handler.emit("incorrectCommand", ctx, cmd);
-    if (!await this.runPostInhibitors(ctx, command)) return;
+    if (!await this.runCommandInhibitors(ctx, command)) return;
 
+    // Parse the message arguments.
+    let params: unknown[] | Promise<unknown[]>;
+    if (typeof command.params === "object") {
+      const { flagKeys, optionKeys } = await ContentParser.getFlags(command.params);
+      const parsed = new ContentParser({ optionKeys, flagKeys }).parse(args.join(" "));
+
+      for (const flag of parsed.flags) ctx.flags.set(flag.key!, true);
+      params = parsed.phrases;
+    } else params = args;
+
+    // Resolve the arguments or if an error is caught emit an event.
     try {
-      await command.run(ctx);
-      this.handler.emit("commandRan", ctx, command);
+      params = command.options.resolver
+        ? command.options.resolver.call(command, params as string[], ctx)
+        : params;
+
+      if (isPromise(params)) params = await params;
     } catch (e) {
-      this.handler.emit("commandError", ctx, command, e);
+      return this.handler.emit("resolveError", command, ctx, params, e);
+    }
+
+    // Run the command or if an error is caught emit an event..
+    try {
+      await command.run(ctx, params);
+      return this.handler.emit("commandRan", ctx, command);
+    } catch (e) {
+      return this.handler.emit("commandError", ctx, command, e);
     }
   }
 
-  private async runPostInhibitors(ctx: Context, command: Command): Promise<boolean> {
+  /**
+   * @private
+   */
+  private async runAllInhibitors(ctx: Context): Promise<boolean> {
+    const reason = this.inhibitorHandler
+      ? await this.inhibitorHandler.test("all", ctx)
+      : null;
+
+    if (reason !== null) this.handler.emit("messageBlocked", ctx, reason);
+    else return true;
+    return false;
+  }
+
+  /**
+   * @private
+   */
+  private async runPreCommandInhibitors(ctx: Context): Promise<boolean> {
+    const reason = this.inhibitorHandler
+      ? await this.inhibitorHandler.test("pre-command", ctx)
+      : null;
+
+    if (reason !== null) this.handler.emit("messageBlocked", ctx, reason);
+    else return true;
+    return false;
+  }
+
+  /**
+   * @private
+   */
+  private async runCommandInhibitors(ctx: Context, command: Command): Promise<boolean> {
     if (command.developerOnly) {
       if (!this.options.developers?.includes(ctx.author.id)) {
         this.handler.emit("commandBlocked", ctx, command, "developerOnly");
@@ -125,6 +229,15 @@ export class CommandDispatcher {
       return false;
     }
 
+    const reason = this.inhibitorHandler
+      ? await this.inhibitorHandler.test("command", ctx)
+      : null;
+
+    if (reason !== null) {
+      this.handler.emit("commandBlocked", ctx, command, reason);
+      return false;
+    }
+
     if (!await this._checkPermissions(ctx, command)) return false;
     return await this._checkRatelimits(ctx, command);
   }
@@ -133,6 +246,7 @@ export class CommandDispatcher {
    * @private
    */
   private async _checkPermissions(ctx: Context, command: Command): Promise<boolean> {
+    const channel = ctx.channel as GuildChannel;
     if (command.clientPerms) {
       if (typeof command.clientPerms === "function") {
         let missing = command.clientPerms(ctx);
@@ -142,7 +256,7 @@ export class CommandDispatcher {
           return false;
         }
       } else if (ctx.guild) {
-        const missing = ctx.guild.me!.permissionsIn(ctx.channel as any).missing(command.clientPerms);
+        const missing = ctx.guild.me!.permissionsIn(channel).missing(command.clientPerms);
         if (missing.length) {
           this.handler.emit("missingPermissions", ctx, command, "client", missing);
           return false;
@@ -167,7 +281,7 @@ export class CommandDispatcher {
             return false;
           }
         } else if (ctx.guild) {
-          const missing = ctx.member!.permissionsIn(ctx.channel as any).missing(command.memberPerms);
+          const missing = ctx.member!.permissionsIn(channel).missing(command.memberPerms);
           if (missing.length) {
             this.handler.emit("missingPermissions", ctx, command, "member", missing);
             return false;
@@ -235,27 +349,6 @@ export class CommandDispatcher {
   }
 
   /**
-   * Parse prefixes.
-   * @param ctx
-   * @param content
-   */
-  private async parsePrefixes(ctx: Context, content: string): Promise<string | null> {
-    let prefixes = typeof this.options.prefix === "function"
-      ? this.options.prefix.apply(this.client, [ ctx ])
-      : array(this.options.prefix!);
-
-    if (isPromise(prefixes)) prefixes = await prefixes;
-    prefixes = array(prefixes);
-
-    for (const prefix of prefixes) {
-      const regex = new RegExp(`^${prefix}`, "i");
-      if (regex.test(content)) return prefix;
-    }
-
-    return null;
-  }
-
-  /**
    * Initializes the context sweeper.
    * @private
    */
@@ -276,7 +369,9 @@ export class CommandDispatcher {
 }
 
 export type IgnorePermissions = (ctx: Context, command: Command) => boolean | Promise<boolean>;
+
 export type IgnoreCooldown = (ctx: Context, command: Command) => boolean | Promise<boolean>;
+
 export type PrefixProvider = (this: BladeClient, ctx: Context) => string | string[] | Promise<string | string[]>;
 
 export interface DispatcherOptions {
@@ -288,4 +383,5 @@ export interface DispatcherOptions {
   ignoreRatelimit?: string[] | IgnoreCooldown;
   ignorePermissions?: string[] | IgnorePermissions;
   passive?: boolean;
+  inhibitorHandler?: InhibitorHandler;
 }

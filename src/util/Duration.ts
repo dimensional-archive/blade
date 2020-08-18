@@ -28,22 +28,22 @@ export class Duration {
 
   /**
    * Parses a number into a string.
-   * @param val The number to parse.
+   * @param number The number to parse.
    * @param long Whether or not to return the long version.
    * @since 1.0.0
    */
-  public static parse(val: number, long?: boolean): string;
+  public static parse(number: number, long?: boolean): string;
   /**
    * Parses a string into milliseconds.
-   * @param val The string to parse.
+   * @param string The string to parse.
    * @since 1.0.0
    */
-  public static parse(val: string): number;
-  public static parse(val: string | number, long = false): number | string {
+  public static parse(string: string): number;
+  public static parse(value: string | number, long = false): number | string {
     let abs, ms = 0;
-    if (typeof val === "string" && val.length) {
-      if (val.length < 101) {
-        const units = Duration._tokenize(val.toLowerCase());
+    if (typeof value === "string" && value.length) {
+      if (value.length < 101) {
+        const units = Duration._tokenize(value.toLowerCase());
         for (const unit of units) {
           const fmt = regex.exec(unit);
           if (fmt) {
@@ -56,13 +56,13 @@ export class Duration {
       }
     }
 
-    if (typeof val === "number" && isFinite(val)) {
-      abs = Math.abs(val);
-      if (abs >= Unit.DAY) return Duration._pluralize(val, Unit.DAY, [ "d", "day" ], long);
-      if (abs >= Unit.HOUR) return Duration._pluralize(val, Unit.HOUR, [ "h", "hour" ], long);
-      if (abs >= Unit.MINUTE) return Duration._pluralize(val, Unit.MINUTE, [ "m", "minute" ], long);
-      if (abs >= Unit.SECOND) return Duration._pluralize(val, Unit.SECOND, [ "s", "second" ], long);
-      return `${val}${long ? " milliseconds" : "ms"}`;
+    if (typeof value === "number" && isFinite(value)) {
+      abs = Math.abs(value);
+      if (abs >= Unit.DAY) return Duration._pluralize(value, Unit.DAY, [ "d", "day" ], long);
+      if (abs >= Unit.HOUR) return Duration._pluralize(value, Unit.HOUR, [ "h", "hour" ], long);
+      if (abs >= Unit.MINUTE) return Duration._pluralize(value, Unit.MINUTE, [ "m", "minute" ], long);
+      if (abs >= Unit.SECOND) return Duration._pluralize(value, Unit.SECOND, [ "s", "second" ], long);
+      return `${value}${long ? " milliseconds" : "ms"}`;
     }
 
     throw new Error("Value is an empty string or an invalid number");

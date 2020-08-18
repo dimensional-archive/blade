@@ -1,10 +1,9 @@
-import { blade } from "../../util";
 import { Monitor } from "./Monitor";
+import { Handler, HandlerOptions } from "../base/Handler";
 
 import type { BladeClient } from "../../Client";
-import type { HandlerOptions } from "../base/Handler";
 
-export class MonitorHandler extends blade.get("Handler")<Monitor> {
+export class MonitorHandler extends Handler<Monitor> {
   /**
    * @param client
    * @param options

@@ -1,6 +1,6 @@
 import type { Constructor } from "@kyudiscord/neo";
 import type { Command, CommandOptions } from "./command/Command";
-import type { Listener, ListenerOptions } from "./listeners/Listener";
+import type { Listener, ListenerOptions } from "./listener/Listener";
 import type { ModuleOptions } from "./base/Module";
 import type { Monitor } from "./monitor/Monitor";
 

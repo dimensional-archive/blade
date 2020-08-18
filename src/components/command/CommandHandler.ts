@@ -1,11 +1,10 @@
-import { CommandDispatcher, DispatcherOptions } from "./Dispatcher";
-import { blade } from "../../util";
+import { CommandDispatcher, DispatcherOptions } from "./CommandDispatcher";
 import { Command } from "./Command";
+import { Handler, HandlerOptions } from "../base/Handler";
 
-import type { HandlerOptions } from "../base/Handler";
 import type { BladeClient } from "../../Client";
 
-export class CommandHandler extends blade.get("Handler")<Command> {
+export class CommandHandler extends Handler<Command> {
   /**
    * The command dispatcher.
    */
@@ -23,7 +22,6 @@ export class CommandHandler extends blade.get("Handler")<Command> {
 
     this.dispatcher = new CommandDispatcher(this, options.dispatcher);
   }
-
 }
 
 export interface CommandHandlerOptions extends HandlerOptions {

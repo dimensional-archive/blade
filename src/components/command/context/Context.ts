@@ -2,8 +2,9 @@ import { Params } from "./Params";
 import { Flags } from "./Flags";
 
 import type { Message, Member, Guild, User, TextBasedChannel, Embed } from "@kyudiscord/neo";
-import type { CommandDispatcher } from "../Dispatcher";
+import type { CommandDispatcher } from "../CommandDispatcher";
 import type { BladeClient } from "../../../Client";
+import type { ParamType } from "../parameter/TypeResolver";
 
 export class Context {
   /**
@@ -15,6 +16,11 @@ export class Context {
    * The client.
    */
   public readonly client: BladeClient;
+
+  /**
+   * The command dispatcher.
+   */
+  public readonly dispatcher: CommandDispatcher;
 
   /**
    * Parsed Parameters for this invocation
@@ -73,6 +79,7 @@ export class Context {
   public constructor(dispatcher: CommandDispatcher, message: Message) {
     this.message = message;
     this.client = dispatcher.client;
+    this.dispatcher = dispatcher;
 
     this.params = new Params();
     this.flags = new Flags();
@@ -117,6 +124,18 @@ export class Context {
     return typeof content === "string"
       ? this.lastResponse!.edit(content)
       : this.lastResponse!.edit(b => b.setEmbed(content));
+  }
+
+  /**
+   * Resolve a string into a specific type.
+   * @param value The value to resolve
+   * @param type The type.
+   * @since 1.0.3
+   */
+  public async resolve<T = unknown>(value: string, type: ParamType): Promise<T | null> {
+    const resolver = this.dispatcher.resolver.type(type);
+    if (!resolver) throw new Error(`Type "${type}" does not exist.`);
+    return (await resolver(value, this) as T) ?? null;
   }
 
   /**

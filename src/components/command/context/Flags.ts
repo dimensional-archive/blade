@@ -22,6 +22,17 @@ export class Flags {
   }
 
   /**
+   * Set a flag value.
+   * @param flag The flag to set.
+   * @param value The flag value.
+   * @since 1.0.0
+   */
+  public set(flag: string, value: unknown): Flags {
+    this._data[flag] = value;
+    return this;
+  }
+
+  /**
    * Whether or not a flag exists.
    * @param flag The flag to check
    * @since 1.0.0

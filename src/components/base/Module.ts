@@ -5,7 +5,12 @@ import { join } from "path";
 import type { BladeClient } from "../../Client";
 import type { Handler } from "./Handler";
 
-export class Module extends Structure {
+export class Module<O extends ModuleOptions = ModuleOptions> extends Structure {
+  /**
+   * The options that were provided.
+   */
+  public readonly options: O;
+
   /**
    * The ID of this component.
    */
@@ -45,8 +50,10 @@ export class Module extends Structure {
    * @param client
    * @param options
    */
-  public constructor(client: BladeClient, public readonly options: ModuleOptions = {}) {
+  public constructor(client: BladeClient, options: Partial<O> = {}) {
     super(client);
+
+    this.options = options as O;
 
     this.id = options.id!;
     this.enabled = options.enabled ?? true;

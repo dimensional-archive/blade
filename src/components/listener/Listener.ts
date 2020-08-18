@@ -1,11 +1,10 @@
-import { array, blade, isPromise } from "../../util";
+import { array, isPromise } from "../../util";
+import { Module, ModuleOptions } from "../base/Module";
 
-import type { EventEmitter } from "events";
-import type { ModuleOptions } from "../base/Module";
 import type { BladeClient } from "../../Client";
-import type { ListenerHandler } from "./Handler";
+import type { ListenerHandler } from "./ListenerHandler";
 
-export class Listener extends blade.get("Module") {
+export class Listener extends Module<ListenerOptions> {
   /**
    * The listeners handler.
    */
@@ -46,7 +45,7 @@ export class Listener extends blade.get("Module") {
   /**
    * The emitter to listen on.
    */
-  public get emitter(): EventEmitter {
+  public get emitter(): EventEmitterLike {
     let emitter = this.options.emitter ?? this.client;
     if (typeof emitter === "string") {
       const _emitter = this.handler.emitters[emitter];
@@ -60,7 +59,8 @@ export class Listener extends blade.get("Module") {
   /**
    * Called whenever
    */
-  public run(): void {
+  public run(...args: unknown[]): void {
+    void args;
     return;
   }
 
@@ -135,7 +135,7 @@ type Fn<R = unknown> = (...args: unknown[]) => R
 
 export interface ListenerOptions extends ModuleOptions {
   event: string | string[];
-  emitter?: string | EventEmitter;
+  emitter?: string | EventEmitterLike;
   once?: boolean;
   map?: Dictionary<string>;
 }

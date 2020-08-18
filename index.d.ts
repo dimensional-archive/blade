@@ -4,10 +4,10 @@ import type {
   Constructor,
   Embed,
   Extender,
+  Fn,
   Guild,
   Member,
   Message,
-  Permission,
   PermissionResolvable,
   ProxyStore,
   Store,
@@ -18,6 +18,7 @@ import type {
 import type { Logger } from "@melike2d/logger";
 import type { EventEmitter } from "events";
 import type { Stats } from "fs";
+import type { MessageType } from "@kyudiscord/dapi";
 
 declare global {
   type Tuple<A, B> = [ A, B ];
@@ -26,10 +27,9 @@ declare global {
     capitalize(lowerRest?: boolean): this;
   }
 }
-
 declare module "@kyudiscord/neo" {
   interface Message {
-    ctx: Context;
+    ctx?: Context;
   }
 }
 
@@ -42,6 +42,10 @@ export class Context {
    * The client.
    */
   readonly client: BladeClient;
+  /**
+   * The command dispatcher.
+   */
+  readonly dispatcher: CommandDispatcher;
   /**
    * Parsed Parameters for this invocation
    */
@@ -100,10 +104,21 @@ export class Context {
    * @param content Content to edit the message with.
    */
   edit(content: string | Embed): Promise<Message>;
+
+  /**
+   * Resolve a string into a specific type.
+   * @param value The value to resolve
+   * @param type The type.
+   * @since 1.0.3
+   */
+  resolve<T = unknown>(value: string, type: ParamType): Promise<T | null>;
 }
 
-export class Module extends Structure {
-  readonly options: ModuleOptions;
+export class Module<O extends ModuleOptions = ModuleOptions> extends Structure {
+  /**
+   * The options that were provided.
+   */
+  readonly options: O;
   /**
    * The ID of this component.
    */
@@ -137,7 +152,7 @@ export class Module extends Structure {
    * @param client
    * @param options
    */
-  constructor(client: BladeClient, options?: ModuleOptions);
+  constructor(client: BladeClient, options?: Partial<O>);
 
   /**
    * Ran when the client is ready.
@@ -286,6 +301,14 @@ export class Flags {
   get<T>(flag: string): T;
 
   /**
+   * Set a flag value.
+   * @param flag The flag to set.
+   * @param value The flag value.
+   * @since 1.0.0
+   */
+  set(flag: string, value: unknown): Flags;
+
+  /**
    * Whether or not a flag exists.
    * @param flag The flag to check
    * @since 1.0.0
@@ -314,12 +337,394 @@ export class Params {
   set(parameter: string, value: unknown): Params;
 }
 
-export class Command extends Module {
+export class ContentParser {
+  /**
+   * Flag keys.
+   */
+  flagKeys: string[];
+  /**
+   * Option flag keys.
+   */
+  optionKeys: string[];
+  /**
+   * Whether or not the content is quoted/has quotes.
+   */
+  quoted: boolean;
+  /**
+   * The argument separator.
+   */
+  separator: string;
+
+  /**
+   * @param flagKeys
+   * @param optionKeys
+   * @param quoted
+   * @param separator
+   */
+  constructor({ flagKeys, optionKeys, quoted, separator }?: ContentParserOptions);
+
+  /**
+   * Get all flags from command parameters.
+   * @param parameters The command parameters.
+   * @since 1.0.3
+   */
+  static getFlags(parameters: Dictionary<ParameterOptions>): Promise<FlagResults>;
+
+  /**
+   * Parses a string.
+   * @param content The content to parse.
+   * @since 1.0.3
+   */
+  parse(content: string): ContentParserResult;
+}
+
+export interface ContentParserOptions {
+  flagKeys?: string[];
+  optionKeys?: string[];
+  quoted?: boolean;
+  separator?: string;
+}
+
+export interface StringData {
+  type: "Phrase" | "Flag" | "OptionFlag";
+  raw: string;
+  key?: string;
+  value?: string;
+}
+
+export interface ContentParserResult {
+  all: StringData[];
+  phrases: StringData[];
+  flags: StringData[];
+  options: StringData[];
+}
+
+export interface FlagResults {
+  optionKeys: string[];
+  flagKeys: string[];
+}
+
+export class Parser {
+  tokens: Token[];
+  /**
+   * Whether or not ***separated***
+   */
+  separated: boolean;
+  /**
+   * The position.
+   */
+  position: number;
+  /**
+   * The parser results.
+   */
+  results: ParserResults;
+
+  /**
+   * @param tokens
+   * @param separated
+   */
+  constructor(tokens: Token[], separated?: boolean);
+
+  /**
+   * Parses the tokens.
+   */
+  parse(): ParserResults;
+}
+
+export interface ParserResults {
+  all: any[];
+  phrases: any[];
+  flags: any[];
+  options: any[];
+}
+
+export class Tokenizer {
+  /**
+   * Flag words.
+   */
+  readonly flagWords: string[];
+  /**
+   * Option flag words
+   */
+  readonly optionFlags: string[];
+  /**
+   * Whether or not the content is quoted/has quotes.
+   */
+  readonly quoted: boolean;
+  /**
+   * The separator.
+   */
+  readonly separator: string;
+  /**
+   * The provided content.
+   */
+  readonly content: string;
+
+  constructor(content: string, { flagWords, optionFlagWords, quoted, separator, }?: TokenizerData);
+
+  /**
+   * @param str
+   */
+  startsWith(str: string): boolean;
+
+  /**
+   * @param regex
+   */
+  match(regex: RegExp): RegExpMatchArray | null;
+
+  /**
+   * @param from
+   * @param to
+   */
+  slice(from: number, to: number): string;
+
+  /**
+   * @param type
+   * @param value
+   */
+  addToken(type: TokenType, value: string): void;
+
+  /**
+   * Advances the tokenizer position.
+   * @param n
+   */
+  advance(n: number): void;
+
+  /**
+   * @param actions
+   */
+  choice(...actions: Fn[]): void;
+
+  /**
+   * Tokenize's content.
+   */
+  tokenize(): Token[];
+
+  /**
+   * Runs once.
+   */
+  runOne(): void;
+
+  /**
+   * Runs a flag.
+   */
+  runFlags(): boolean;
+
+  /**
+   * Runs an option flags.
+   */
+  runOptionFlags(): boolean;
+
+  /**
+   * Runs a quote.
+   */
+  runQuote(): boolean;
+
+  /**
+   * Runs an open quote.
+   */
+  runOpenQuote(): boolean;
+
+  /**
+   * Runs an end quote.
+   */
+  runEndQuote(): boolean;
+
+  /**
+   * Runs the separator.
+   */
+  runSeparator(): boolean;
+
+  runWord(): boolean;
+
+  /**
+   * Runs whitespace
+   */
+  runWhitespace(): boolean;
+}
+
+export type TokenType =
+  "WS"
+  | "Word"
+  | "Separator"
+  | "OpenQuote"
+  | "EndQuote"
+  | "FlagWord"
+  | "Quote"
+  | "OptionFlagWord"
+  | "EOF";
+export type Token = {
+  type: TokenType;
+  value: string;
+};
+
+export interface TokenizerData {
+  flagWords: string[];
+  optionFlagWords: string[];
+  quoted: boolean;
+  separator: string;
+}
+
+export enum ParamType {
+  STRING = "string",
+  NUMBER = "number",
+  FLAG = "flag",
+  MEMBER = "member",
+  USER = "user",
+  GUILD = "guild",
+  VOICE_CHANNEL = "voiceChannel",
+  TEXT_CHANNEL = "textChannel",
+  ROLE = "role",
+  EMOJI = "emoji",
+  URL = "url",
+  INTEGER = "integer",
+  EMOJI_INT = "emojiInt",
+  DATE = "date",
+  COLOR = "color",
+  BIGINT = "bigint"
+}
+
+export class TypeResolver {
+  static BUILT_IN: Record<string, Resolver>;
+  /**
+   * The client instance.
+   */
+  readonly client: BladeClient;
+  /**
+   * Types to use.
+   */
+  readonly types: Store<string, Resolver>;
+
+  /**
+   * @param client
+   */
+  constructor(client: BladeClient);
+
+  /**
+   * Add all built-in type resolvers.
+   */
+  addBuiltIns(): this;
+
+  /**
+   * Get a type resolver.
+   * @param type
+   * @since 1.0.0
+   */
+  type(type: ParamType): Resolver | undefined;
+}
+
+export type Resolver = (phrase: string, ctx: Context) => Promise<unknown> | unknown;
+
+export enum ActionKey {
+  DECLARE_FLAG = 0,
+  MAKE_GREEDY = 1,
+  DECLARE_TYPE = 2,
+  VALIDATE = 3,
+  DECLARE_MATCH = 4
+}
+
+export class TypeBuilder {
+  /**
+   * Actions the user wants done or smth idrfk.
+   * Sorts the actions: flag? -> greedy? -> type | regex | custom -> validations?
+   */
+  getActions(): ParsedActions;
+
+  /**
+   * Declare the type of this parameter..
+   * @param type
+   */
+  resolve(type: ParamType): TypeBuilder;
+
+  /**
+   * Consumes the rest of the content.
+   */
+  rest(): TypeBuilder;
+
+  /**
+   * Declares a custom type for this parameter.
+   * @param type
+   */
+  custom(type: TypeCast): TypeBuilder;
+
+  /**
+   * Uses a regular expression as the parameter type.
+   * @param regex
+   */
+  match(regex: RegExp): TypeBuilder;
+
+  /**
+   * Validate the parameter.
+   * @param validation
+   */
+  validate<T>(validation: Validation<T>): TypeBuilder;
+
+  /**
+   * Validates the range of a number parameter.
+   * @param from
+   * @param to
+   * @param orEqualTo
+   */
+  range(from: number, to: number, orEqualTo?: boolean): TypeBuilder;
+
+  /**
+   * Turns this parameter into a flag.
+   * @param settings The settings to use when parsing this parameter.
+   */
+  flag(settings?: FlagSettings): TypeBuilder;
+
+  /**
+   * Makes this parameter greedy.
+   */
+  greedy(settings?: GreedySettings): TypeBuilder;
+
+  /**
+   * Whether or not the value is of something.
+   * @param type
+   */
+  of(type: Array<string | string[]>): TypeBuilder;
+}
+
+export type Validation<T = unknown> = (v: T, ctx: Context) => boolean;
+export type TypeCast = (phrase: string, ctx: Context) => unknown;
+export type ParameterType = RegExp | ParamType | TypeCast;
+
+export interface BuilderAction<V = any> {
+  key: ActionKey;
+  value: V;
+}
+
+export interface FlagSettings {
+  aliases?: string[];
+  option?: boolean;
+}
+
+export interface GreedySettings {
+  min?: number;
+  max?: number;
+}
+
+export interface ParsedActions {
+  flag?: FlagSettings;
+  greedy?: GreedySettings;
+  validations: Validation[];
+  type: ParameterType;
+  match?: "rest";
+}
+
+export const RATELIMIT_REGEXP: RegExp;
+export const ratelimitDefaults: CommandRatelimit;
+
+export class Command extends Module<CommandOptions> {
   readonly options: CommandOptions;
   /**
    * Ratelimits for this command
    */
   readonly ratelimits: Store<string, Ratelimit>;
+  /**
+   * The commands handler.
+   */
+  handler: CommandHandler;
   /**
    * The environments this command can be ran in.
    */
@@ -336,6 +741,10 @@ export class Command extends Module {
    * Permissions the invoker needs to run the command.
    */
   memberPerms: PermissionResolvable[] | Permissions;
+  /**
+   * Parameters given to this command.
+   */
+  params: Dictionary<ParameterOptions> | boolean;
   /**
    * This command's usage.
    */
@@ -368,6 +777,11 @@ export class Command extends Module {
   constructor(client: BladeClient, options?: CommandOptions);
 
   /**
+   * The command dispatcher.
+   */
+  get dispatcher(): CommandDispatcher;
+
+  /**
    * The ratelimit options for this command.
    */
   get ratelimit(): CommandRatelimit;
@@ -375,27 +789,88 @@ export class Command extends Module {
   /**
    * Called whenever a message matches any of the provided triggers.
    * @param ctx The command context.
+   * @param args
    * @since 1.0.0
    */
-  run(ctx: Context): Promise<unknown>;
+  run(ctx: Context, args: Array<string | unknown>): unknown;
 }
 
+/**
+ * The type of channel to run the command in.
+ */
 export type RunIn = "guild" | "dm";
+/**
+ * The typeof command ratelimit.
+ */
 export type RatelimitType = "user" | "channel" | "guild";
+/**
+ * The permissions handler.
+ */
 export type Permissions = (ctx: Context) => void | null | Promise<void | null>;
+/**
+ * Provides the parameter a default value.
+ */
+export type DefaultProvider = ((ctx: Context) => unknown | Promise<unknown>);
+/**
+ * Used for creating advanced parameter types.
+ */
+export type TypeBuilderProvider = ((b: TypeBuilder) => TypeBuilder | Promise<TypeBuilder>);
 
 export interface CommandOptions extends ModuleOptions {
+  /**
+   * The phrases that trigger this command.
+   */
   triggers?: string[];
+  /**
+   * The usage of this command.
+   */
   usage?: string;
+  /**
+   * The command description.
+   */
   description?: string;
+  /**
+   * Example usages of this command.
+   */
   examples?: string[];
+  /**
+   * Extended help for this command.
+   */
   extendedDescription?: string;
+  /**
+   * The typeof channel that is required for this command to be ran.
+   */
   runIn?: RunIn;
+  /**
+   * Whether or not this command can only be ran by developers.
+   */
   developerOnly?: boolean;
+  /**
+   * The ratelimit for this command.
+   */
   ratelimit?: string;
-  clientPerms?: Permission[] | Permissions;
-  memberPerms?: Permission[] | Permissions;
+  /**
+   * The permissions the client needs for this command to be ran.
+   */
+  clientPerms?: PermissionResolvable[] | Permissions;
+  /**
+   * The permissions the command invoker needs for this command to be ran.
+   */
+  memberPerms?: PermissionResolvable[] | Permissions;
+  /**
+   * The users that the permission check will ignore.
+   */
   ignorePermissions?: string[] | IgnorePermissions;
+  /**
+   * The parameters to parse.
+   */
+  params?: Dictionary<ParameterOptions> | boolean;
+  /**
+   * The resolver to use when parsing commands.
+   * @param phrases Parsed phrases.
+   * @param ctx The context.
+   */
+  resolver?: (phrases: string[], ctx: Context) => unknown[] | Promise<unknown[]>;
 }
 
 export interface CommandRatelimit {
@@ -410,7 +885,20 @@ export interface Ratelimit {
   timeout: NodeJS.Timeout;
 }
 
-export {};
+export interface ParameterOptions {
+  prompt?: PromptOptions;
+  type: ParamType | TypeBuilderProvider;
+  default?: unknown | DefaultProvider;
+  index?: number;
+  unordered?: boolean;
+}
+
+export interface PromptOptions {
+  start?: string;
+  retry?: string;
+  tries?: number;
+  time?: number | string;
+}
 
 export class CommandDispatcher {
   readonly options: DispatcherOptions;
@@ -426,6 +914,14 @@ export class CommandDispatcher {
    * All contexts.
    */
   readonly contexts: Store<string, Context>;
+  /**
+   * The type resolver.
+   */
+  readonly resolver: TypeResolver;
+  /**
+   * The inhibitor handler.
+   */
+  inhibitorHandler?: InhibitorHandler;
 
   /**
    * @param handler
@@ -442,6 +938,13 @@ export class CommandDispatcher {
    * A regexp for testing whether or not message content only includes a mention.
    */
   get aloneRegexp(): RegExp;
+
+  /**
+   * Use an inhibitor handler when dispatching commands.
+   * @param inhibitorHandler The handler to use.
+   * @since 1.0.3
+   */
+  useInhibitors(inhibitorHandler: InhibitorHandler): this;
 
   /**
    * Handles an incoming message.
@@ -463,6 +966,7 @@ export interface DispatcherOptions {
   ignoreRatelimit?: string[] | IgnoreCooldown;
   ignorePermissions?: string[] | IgnorePermissions;
   passive?: boolean;
+  inhibitorHandler?: InhibitorHandler;
 }
 
 export class CommandHandler extends Handler<Command> {
@@ -482,24 +986,20 @@ export interface CommandHandlerOptions extends HandlerOptions {
   dispatcher?: DispatcherOptions;
 }
 
-export class Listener extends Module {
+export class Listener extends Module<ListenerOptions> {
   readonly options: ListenerOptions;
-
   /**
    * The listeners handler.
    */
   handler: ListenerHandler;
-
   /**
    * The events this listener is for.
    */
   event: string[];
-
   /**
    * Whether or not this listener is ran once.
    */
   once: boolean;
-
   /**
    * The method map.
    */
@@ -514,12 +1014,12 @@ export class Listener extends Module {
   /**
    * The emitter to listen on.
    */
-  get emitter(): EventEmitter;
+  get emitter(): EventEmitterLike;
 
   /**
    * Called whenever
    */
-  run(): void;
+  run(...args: unknown[]): void;
 
   /**
    * @private
@@ -534,18 +1034,16 @@ export class Listener extends Module {
 
 export interface ListenerOptions extends ModuleOptions {
   event: string | string[];
-  emitter?: string | EventEmitter;
+  emitter?: string | EventEmitterLike;
   once?: boolean;
   map?: Dictionary<string>;
 }
-
-export {};
 
 export class ListenerHandler extends Handler<Listener> {
   /**
    * Emitters to use for listeners.
    */
-  emitters: Dictionary<EventEmitter>;
+  emitters: Dictionary<EventEmitterLike>;
 
   /**
    * @param client
@@ -569,24 +1067,56 @@ export class ListenerHandler extends Handler<Listener> {
   remove(resolvable: ModuleResolvable<Listener>): Listener | null;
 }
 
-export interface ListenerHandlerOptions {
+export interface ListenerHandlerOptions extends HandlerOptions {
   emitters?: Dictionary<EventEmitter>;
 }
 
-export {};
+export class Monitor extends Module<MonitorOptions> {
+  /**
+   * Different things to ignore.
+   */
+  ignore: MonitorIgnore;
+  /**
+   * The allowed types of message.
+   */
+  allowedTypes: MessageType[];
 
-export class Monitor extends Module {
+  /**
+   * @param client
+   * @param options
+   */
+  constructor(client: BladeClient, options?: MonitorOptions);
+
   /**
    * Called whenever a message is received.
-   * @param _message
+   * @param message
    * @since 1.0.0
    */
-  run(_message: Message): unknown;
+  run(message: Message): unknown;
 
   /**
    * @private
    */
   _run(message: Message): Promise<void>;
+}
+
+export interface MonitorOptions extends ModuleOptions {
+  /**
+   * Types of messages
+   */
+  allowedTypes?: MessageType[];
+  /**
+   * Things to ignore.
+   */
+  ignore?: MonitorIgnore;
+}
+
+export interface MonitorIgnore {
+  bots?: boolean;
+  self?: boolean;
+  others?: boolean;
+  webhooks?: boolean;
+  edits?: boolean;
 }
 
 export class MonitorHandler extends Handler<Monitor> {
@@ -596,8 +1126,6 @@ export class MonitorHandler extends Handler<Monitor> {
    */
   constructor(client: BladeClient, options: HandlerOptions);
 }
-
-export {};
 
 /**
  * A helper decorator for applying options to a command.
@@ -622,10 +1150,21 @@ export function monitor(options?: ModuleOptions): <T extends new (...args: any[]
 
 export type Decorator<M> = (target: Constructor<M>) => Constructor<M>;
 
+export abstract class Provider<V extends any> {
+  items: Store<string, V>;
+
+  abstract init(): Promise<unknown>;
+
+  abstract get<T>(id: string, path?: string): T | V;
+
+  abstract delete(id: string, path?: string): unknown | Promise<unknown>;
+
+  abstract update(id: string, value: unknown, path?: string): unknown | Promise<unknown>;
+}
+
 export const blade: Extender<unknown, {
   Context: typeof Context;
   CommandDispatcher: typeof CommandDispatcher;
-  Module: typeof Module;
   Handler: typeof Handler;
 }>;
 
@@ -644,17 +1183,17 @@ export enum Unit {
 export class Duration {
   /**
    * Parses a number into a string.
-   * @param val The number to parse.
+   * @param number The number to parse.
    * @param long Whether or not to return the long version.
    * @since 1.0.0
    */
-  static parse(val: number, long?: boolean): string;
+  static parse(number: number, long?: boolean): string;
   /**
    * Parses a string into milliseconds.
-   * @param val The string to parse.
+   * @param string The string to parse.
    * @since 1.0.0
    */
-  static parse(val: string): number;
+  static parse(string: string): number;
 }
 
 /**
@@ -685,11 +1224,19 @@ export function isClass(input: unknown): input is Constructor<unknown>;
 export function capitalize(str: string, lowerRest?: boolean): string;
 
 /**
+ * Combines two words into one.
+ * @param a The first word
+ * @param b The second word
+ * @author Sxmurai
+ */
+export function combine(a: string, b: string): string;
+
+/**
  * A helper function for determining if a value is an event emitter.
  * @param input
  * @since 2.0.0
  */
-export function isEmitter(input: any): input is EventEmitter;
+export function isEmitter(input: unknown): input is EventEmitterLike;
 
 /**
  * Returns an array.
@@ -705,10 +1252,14 @@ export function array<T>(v: T | T[]): T[];
  */
 export function isString(value: unknown): value is string;
 
-export function isPromise(value: any): value is Promise<unknown>;
+/**
+ * A helper function for determining whether or not a value is a promise,
+ * @param value
+ */
+export function isPromise(value: unknown): value is Promise<unknown>;
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export function intoCallable(value: unknown): value is Function;
+export function intoCallable(value: unknown): Function;
 
 /**
  * Code block template tag.
@@ -721,6 +1272,12 @@ export function code(strings: TemplateStringsArray, ...values: unknown[]): strin
  * @param type The type of code block.
  */
 export function code(type: string): TemplateTag;
+
+/**
+ * Merges objects into one.
+ * @param objects The objects to merge.
+ */
+export function mergeObjects<O extends Dictionary = Dictionary>(...objects: Partial<O>[]): O;
 
 export type TemplateTag = (strings: TemplateStringsArray, ...values: unknown[]) => string;
 
@@ -830,5 +1387,69 @@ export class BladeClient extends Client {
 export interface BladeOptions extends ClientOptions {
   token: string;
   directory?: string;
+}
+
+export class InhibitorHandler extends Handler<Inhibitor> {
+  /**
+   * @param client
+   * @param options
+   */
+  constructor(client: BladeClient, options?: HandlerOptions);
+
+  /**
+   * Tests inhibitors.
+   * @param type The type of inhibitors to test.
+   * @param ctx
+   * @param command
+   */
+  test(type: InhibitorType, ctx: Context, command?: Command): Promise<string | void | null>;
+}
+
+export class Inhibitor extends Module<InhibitorOptions> {
+  /**
+   * The typeof inhibitor this is.
+   */
+  type: InhibitorType;
+  /**
+   * The priority of this inhibitor.
+   */
+  priority: number;
+
+  /**
+   * @param client
+   * @param options
+   */
+  constructor(client: BladeClient, options?: InhibitorOptions);
+
+  /**
+   * The reason to use when this inhibitor trips.
+   */
+  get reason(): string;
+
+  /**
+   * Run this inhibitor.
+   * @param ctx The context instance.
+   * @param command The command if the type of this inhibitor is not "all"
+   */
+  run(ctx: Context, command?: Command): boolean | unknown | Promise<boolean | unknown>;
+
+  /**
+   * @private
+   */
+  _run(ctx: Context, command?: Command): Promise<boolean | unknown>;
+}
+
+/**
+ * The type of inhibitor
+ * - "command": Runs on messages that invoke a command.
+ * - "all": Runs on all messages.
+ * - "pre-command": Runs before the message is checked if the message invokes a command..
+ */
+export type InhibitorType = "command" | "all" | "pre-command";
+
+export interface InhibitorOptions extends ModuleOptions {
+  type?: InhibitorType;
+  reason?: string;
+  priority?: number;
 }
 

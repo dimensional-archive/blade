@@ -1,15 +1,15 @@
-import { blade } from "../../util";
 import { Listener } from "./Listener";
+import { Handler, HandlerOptions } from "../base/Handler";
 
 import type { EventEmitter } from "events";
 import type { BladeClient } from "../../Client";
 import type { ModuleResolvable } from "../base/Module";
 
-export class ListenerHandler extends blade.get("Handler")<Listener> {
+export class ListenerHandler extends Handler<Listener> {
   /**
    * Emitters to use for listeners.
    */
-  public emitters: Dictionary<EventEmitter>;
+  public emitters: Dictionary<EventEmitterLike>;
 
   /**
    * @param client
@@ -48,6 +48,6 @@ export class ListenerHandler extends blade.get("Handler")<Listener> {
   }
 }
 
-export interface ListenerHandlerOptions {
+export interface ListenerHandlerOptions extends HandlerOptions {
   emitters?: Dictionary<EventEmitter>;
 }

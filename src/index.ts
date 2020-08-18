@@ -6,14 +6,20 @@ export * from "./components/base/Handler";
 export * from "./components/command/context/Context";
 export * from "./components/command/context/Flags";
 export * from "./components/command/context/Params";
+export * from "./components/command/parameter/parser/ContentParser";
+export * from "./components/command/parameter/parser/Parser";
+export * from "./components/command/parameter/parser/Tokenizer";
+export * from "./components/command/parameter/TypeResolver";
+export * from "./components/command/parameter/TypeBuilder";
 export * from "./components/command/Command";
-export * from "./components/command/Dispatcher";
-export * from "./components/command/Handler";
-export * from "./components/listeners/Listener";
-export * from "./components/listeners/Handler";
+export * from "./components/command/CommandDispatcher";
+export * from "./components/command/CommandHandler";
+export * from "./components/listener/Listener";
+export * from "./components/listener/ListenerHandler";
 export * from "./components/monitor/Monitor";
-export * from "./components/monitor/Handler";
+export * from "./components/monitor/MonitorHandler";
 export * from "./components/Decorators";
+export * from "./components/Provider";
 
 export * from "./util/Extender";
 export * from "./util/Duration";
@@ -34,8 +40,7 @@ declare global {
 }
 
 declare module "@kyudiscord/neo" {
-
   interface Message {
-    ctx: Context
+    ctx?: Context;
   }
 }
