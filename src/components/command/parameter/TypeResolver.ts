@@ -48,11 +48,11 @@ export class TypeResolver {
 
     [ParamType.STRING]: p => p ? p.toString() : null,
 
-    [ParamType.NUMBER]: p => !p && !Number.isNaN(p) ? parseFloat(p) : null,
+    [ParamType.NUMBER]: p => p && !Number.isNaN(p) ? parseFloat(p) : null,
 
-    [ParamType.INTEGER]: p => !p && !Number.isNaN(p) ? parseInt(p) : null,
+    [ParamType.INTEGER]: p => p && !Number.isNaN(p) ? parseInt(p) : null,
 
-    [ParamType.BIGINT]: (p) => !p && !Number.isNaN(p) ? BigInt(p) : null,
+    [ParamType.BIGINT]: p => p && !Number.isNaN(p) ? BigInt(p) : null,
 
     [ParamType.URL](phrase) {
       if (!phrase) return null;
