@@ -769,6 +769,10 @@ export class Command extends Module<CommandOptions> {
    * IDs that will bypass permission checks.
    */
   ignorePermissions: string[] | IgnorePermissions;
+  /**
+   * Whether or not to parse quoted content.
+   */
+  quoted: boolean;
 
   /**
    * @param client
@@ -871,6 +875,10 @@ export interface CommandOptions extends ModuleOptions {
    * @param ctx The context.
    */
   resolver?: (phrases: string[], ctx: Context) => unknown[] | Promise<unknown[]>;
+  /**
+   * Whether or not to parse quoted content.
+   */
+  quoted?: boolean;
 }
 
 export interface CommandRatelimit {

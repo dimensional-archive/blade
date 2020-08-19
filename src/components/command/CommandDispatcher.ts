@@ -156,9 +156,13 @@ export class CommandDispatcher {
     let params: unknown[] | Promise<unknown[]>;
     if (typeof command.params === "object") {
       const { flagKeys, optionKeys } = await ContentParser.getFlags(command.params);
-      const parsed = new ContentParser({ optionKeys, flagKeys }).parse(args.join(" "));
-
       const name = (n: string) => n.replace(/^-+/, "").trim();
+      const parsed = new ContentParser({
+        optionKeys,
+        flagKeys,
+        quoted: command.quoted
+      }).parse(args.join(" "));
+
       for (const flag of parsed.flags) ctx.flags.set(name(flag.key!), true);
       for (const flag of parsed.options) ctx.flags.set(name(flag.key!), flag.value);
 

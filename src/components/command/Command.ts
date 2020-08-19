@@ -79,6 +79,11 @@ export class Command extends Module<CommandOptions> {
   public ignorePermissions: string[] | IgnorePermissions;
 
   /**
+   * Whether or not to parse quoted content.
+   */
+  public quoted: boolean;
+
+  /**
    * @param client
    * @param options
    */
@@ -104,6 +109,7 @@ export class Command extends Module<CommandOptions> {
       ? options.ignorePermissions.bind(this)
       : options.ignorePermissions ?? [];
     this.params = options.params ?? {};
+    this.quoted = options.quoted ?? true;
     this.run = this.run.bind(this);
   }
 
@@ -223,6 +229,10 @@ export interface CommandOptions extends ModuleOptions {
    * @param ctx The context.
    */
   resolver?: (phrases: string[], ctx: Context) => unknown[] | Promise<unknown[]>;
+  /**
+   * Whether or not parameters are quoted.
+   */
+  quoted?: boolean;
 }
 
 export interface CommandRatelimit {
