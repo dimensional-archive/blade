@@ -158,7 +158,10 @@ export class CommandDispatcher {
       const { flagKeys, optionKeys } = await ContentParser.getFlags(command.params);
       const parsed = new ContentParser({ optionKeys, flagKeys }).parse(args.join(" "));
 
-      for (const flag of parsed.flags) ctx.flags.set(flag.key!, true);
+      const name = (n: string) => n.replace(/^-+/, "").trim();
+      for (const flag of parsed.flags) ctx.flags.set(name(flag.key!), true);
+      for (const flag of parsed.options) ctx.flags.set(name(flag.key!), flag.value);
+
       params = parsed.phrases.map(p => p.value!);
     } else params = args;
 

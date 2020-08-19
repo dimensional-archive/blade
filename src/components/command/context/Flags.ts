@@ -1,15 +1,19 @@
 export class Flags {
+  public constructor() {
+    Object.defineProperty(this, "_data", { value: {} });
+  }
+
   /**
    * Raw parameters
    */
-  private _data: Dictionary<unknown> = {}
+  private _data!: Dictionary<unknown>;
 
   /**
    * Set the raw parameter data.
    * @param data
    */
   public set data(data: Dictionary<unknown>) {
-    this._data = data;
+    Object.defineProperty(this, "_data", { value: data });
   }
 
   /**
