@@ -82,11 +82,14 @@ export function isPromise(value: unknown): value is Promise<unknown> {
     && typeof (value as Promise<unknown>).catch === "function";
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function intoCallable(value: unknown): Function {
-  return typeof value === "function"
-    ? value
-    : () => value;
+/**
+ * @param value
+ */
+export function intoCallable<T>(value: T | (() => T)): () => T {
+  // @ts-ignore
+  return typeof value !== "function"
+    ? () => value
+    : value;
 }
 
 /**

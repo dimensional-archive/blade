@@ -1,4 +1,5 @@
 import type {
+  Channel,
   Client,
   ClientOptions,
   Constructor,
@@ -6,10 +7,13 @@ import type {
   Extender,
   Fn,
   Guild,
+  GuildBasedChannel,
+  GuildEmoji,
   Member,
   Message,
   PermissionResolvable,
   ProxyStore,
+  Role,
   Store,
   Structure,
   TextBasedChannel,
@@ -20,6 +24,8 @@ import type { EventEmitter } from "events";
 import type { Stats } from "fs";
 import type { MessageType } from "@kyudiscord/dapi";
 
+import "./util/Extender";
+
 declare global {
   type Tuple<A, B> = [ A, B ];
 
@@ -27,6 +33,7 @@ declare global {
     capitalize(lowerRest?: boolean): this;
   }
 }
+
 declare module "@kyudiscord/neo" {
   interface Message {
     ctx?: Context;
@@ -287,6 +294,8 @@ export interface HandlerOptions {
 }
 
 export class Flags {
+  constructor();
+
   /**
    * Set the raw parameter data.
    * @param data
@@ -317,6 +326,8 @@ export class Flags {
 }
 
 export class Params {
+  constructor();
+
   /**
    * Set the raw parameter data.
    * @param data
@@ -568,7 +579,6 @@ export interface TokenizerData {
 export enum ParamType {
   STRING = "string",
   NUMBER = "number",
-  FLAG = "flag",
   MEMBER = "member",
   USER = "user",
   GUILD = "guild",
@@ -585,7 +595,7 @@ export enum ParamType {
 }
 
 export class TypeResolver {
-  static BUILT_IN: Record<string, Resolver>;
+  static BUILT_IN: Record<ParamType, Resolver>;
   /**
    * The client instance.
    */
@@ -876,7 +886,7 @@ export interface CommandOptions extends ModuleOptions {
    */
   resolver?: (phrases: string[], ctx: Context) => unknown[] | Promise<unknown[]>;
   /**
-   * Whether or not to parse quoted content.
+   * Whether or not parameters are quoted.
    */
   quoted?: boolean;
 }
@@ -1170,124 +1180,31 @@ export abstract class Provider<V extends any> {
   abstract update(id: string, value: unknown, path?: string): unknown | Promise<unknown>;
 }
 
-export const blade: Extender<unknown, {
-  Context: typeof Context;
-  CommandDispatcher: typeof CommandDispatcher;
-  Handler: typeof Handler;
-}>;
-
-/**
- * @file modified https://github.com/Naval-Base/ms
- */
-export enum Unit {
-  SECOND = 1000,
-  MINUTE = 60000,
-  HOUR = 3600000,
-  DAY = 86400000,
-  WEEK = 604800000,
-  YEAR = 31557600000
-}
-
-export class Duration {
+export class Category<T extends Module> extends ProxyStore<string, T> {
   /**
-   * Parses a number into a string.
-   * @param number The number to parse.
-   * @param long Whether or not to return the long version.
-   * @since 1.0.0
+   * The ID of this category.
    */
-  static parse(number: number, long?: boolean): string;
+  readonly id: string;
+
   /**
-   * Parses a string into milliseconds.
-   * @param string The string to parse.
-   * @since 1.0.0
+   * @param handler
+   * @param id
+   * @param commands
    */
-  static parse(string: string): number;
+  constructor(handler: Handler<T>, id: string, commands?: string[]);
 }
 
 /**
- * A helper function to test if a path leads to a directory.
- * @param path
+ * Creates a new logger with a provided name.
+ * @param name The logger name.
+ * @since 1.0.0
  */
-export function isDir(path: string): boolean;
-
+export function logger(name: string | any): PropertyDecorator;
 /**
- * A helper function for recursively reading a directory.
- * @param path
+ * Creates a new logger with a random name.
+ * @since 1.0.0
  */
-export function readDir(path: string): string[];
-
-/**
- * A helper function for determining whether something is a class.
- * @param input
- * @since 2.0.0
- */
-export function isClass(input: unknown): input is Constructor<unknown>;
-
-/**
- * A helper function for capitalizing the first letter in the sentence.
- * @param str
- * @param lowerRest
- * @since 2.0.0
- */
-export function capitalize(str: string, lowerRest?: boolean): string;
-
-/**
- * Combines two words into one.
- * @param a The first word
- * @param b The second word
- * @author Sxmurai
- */
-export function combine(a: string, b: string): string;
-
-/**
- * A helper function for determining if a value is an event emitter.
- * @param input
- * @since 2.0.0
- */
-export function isEmitter(input: unknown): input is EventEmitterLike;
-
-/**
- * Returns an array.
- * @param v
- * @since 2.0.0
- */
-export function array<T>(v: T | T[]): T[];
-
-/**
- * A helper function for determining if a value is a string.
- * @param value
- * @since 2.0.0
- */
-export function isString(value: unknown): value is string;
-
-/**
- * A helper function for determining whether or not a value is a promise,
- * @param value
- */
-export function isPromise(value: unknown): value is Promise<unknown>;
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function intoCallable(value: unknown): Function;
-
-/**
- * Code block template tag.
- * @param strings
- * @param values
- */
-export function code(strings: TemplateStringsArray, ...values: unknown[]): string;
-/**
- * Creates a typed code block template tag.
- * @param type The type of code block.
- */
-export function code(type: string): TemplateTag;
-
-/**
- * Merges objects into one.
- * @param objects The objects to merge.
- */
-export function mergeObjects<O extends Dictionary = Dictionary>(...objects: Partial<O>[]): O;
-
-export type TemplateTag = (strings: TemplateStringsArray, ...values: unknown[]) => string;
+export function logger(target: any, propertyKey: PropertyKey): void;
 
 /**
  * @file A simple git information utility class.
@@ -1345,31 +1262,176 @@ export interface GitCommit {
   subject: string;
 }
 
-export class Category<T extends Module> extends ProxyStore<string, T> {
-  /**
-   * The ID of this category.
-   */
-  readonly id: string;
+/**
+ * A helper function for determining whether something is a class.
+ * @param input
+ * @since 2.0.0
+ */
+export function isClass(input: unknown): input is Constructor<unknown>;
 
-  /**
-   * @param handler
-   * @param id
-   * @param commands
-   */
-  constructor(handler: Handler<T>, id: string, commands?: string[]);
+/**
+ * A helper function for capitalizing the first letter in the sentence.
+ * @param str
+ * @param lowerRest
+ * @since 2.0.0
+ */
+export function capitalize(str: string, lowerRest?: boolean): string;
+
+/**
+ * Combines two words into one.
+ * @param a The first word
+ * @param b The second word
+ * @author Sxmurai
+ */
+export function combine(a: string, b: string): string;
+
+/**
+ * A helper function for determining if a value is an event emitter.
+ * @param input
+ * @since 2.0.0
+ */
+export function isEmitter(input: unknown): input is EventEmitterLike;
+
+/**
+ * Returns an array.
+ * @param v
+ * @since 2.0.0
+ */
+export function array<T>(v: T | T[]): T[];
+
+/**
+ * A helper function for determining if a value is a string.
+ * @param value
+ * @since 2.0.0
+ */
+export function isString(value: unknown): value is string;
+
+/**
+ * A helper function for determining whether or not a value is a promise,
+ * @param value
+ */
+export function isPromise(value: unknown): value is Promise<unknown>;
+
+/**
+ * @param value
+ */
+export function intoCallable<T>(value: T | ((...args: unknown[]) => T)): (...args: unknown[]) => T;
+
+/**
+ * Code block template tag.
+ * @param strings
+ * @param values
+ */
+export function code(strings: TemplateStringsArray, ...values: unknown[]): string;
+/**
+ * Creates a typed code block template tag.
+ * @param type The type of code block.
+ */
+export function code(type: string): TemplateTag;
+
+/**
+ * Merges objects into one.
+ * @param objects The objects to merge.
+ */
+export function mergeObjects<O extends Dictionary = Dictionary>(...objects: Partial<O>[]): O;
+
+export type TemplateTag = (strings: TemplateStringsArray, ...values: unknown[]) => string;
+
+/**
+ * A helper function to test if a path leads to a directory.
+ * @param path
+ */
+export function isDir(path: string): boolean;
+
+/**
+ * A helper function for recursively reading a directory.
+ * @param path
+ */
+export function readDir(path: string): string[];
+
+/**
+ * @file modified https://github.com/Naval-Base/ms
+ */
+export enum Unit {
+  SECOND = 1000,
+  MINUTE = 60000,
+  HOUR = 3600000,
+  DAY = 86400000,
+  WEEK = 604800000,
+  YEAR = 31557600000
 }
 
-/**
- * Creates a new logger with a provided name.
- * @param name The logger name.
- * @since 1.0.0
- */
-export function logger(name: string | any): PropertyDecorator;
-/**
- * Creates a new logger with a random name.
- * @since 1.0.0
- */
-export function logger(target: any, propertyKey: PropertyKey): void;
+export class Duration {
+  /**
+   * Parses a number into a string.
+   * @param number The number to parse.
+   * @param long Whether or not to return the long version.
+   * @since 1.0.0
+   */
+  static parse(number: number, long?: boolean): string;
+  /**
+   * Parses a string into milliseconds.
+   * @param string The string to parse.
+   * @since 1.0.0
+   */
+  static parse(string: string): number;
+}
+
+export const blade: Extender<unknown, {
+  Context: typeof Context;
+  CommandDispatcher: typeof CommandDispatcher;
+  Handler: typeof Handler;
+}>;
+
+export class ClientUtil {
+  resolveUser(s: string, u: S<User>, cs?: boolean, w?: boolean): User | undefined;
+
+  resolveUsers(t: string, u: S<User>, cs?: boolean, w?: boolean): S<User>;
+
+  /**
+   * Check whether or not a user matches a user.
+   */
+  checkUser(t: string, u: User, cs?: boolean, w?: boolean): boolean;
+
+  resolveMember(t: string, m: S<Member>, cs?: boolean, w?: boolean): Member | undefined;
+
+  resolveMembers(t: string, m: S<Member>, cs?: boolean, w?: boolean): S<Member>;
+
+  /**
+   * Check whether or not a member matches a string.
+   */
+  checkMember(t: string, m: Member, cs?: boolean, w?: boolean): boolean;
+
+  resolveRole(t: string, r: S<Role>, cs?: boolean, w?: boolean): Role | undefined;
+
+  resolveRoles(t: string, r: S<Role>, cs?: boolean, w?: boolean): S<Role>;
+
+  /**
+   * Check whether or not a role matches a string.
+   */
+  checkRole(t: string, r: Role, cs?: boolean, w?: boolean): boolean;
+
+  resolveEmoji(t: string, e: S<GuildEmoji>, es?: boolean, w?: boolean): GuildEmoji | undefined;
+
+  resolveEmojis(t: string, e: S<GuildEmoji>, cs?: boolean, w?: boolean): S<GuildEmoji>;
+
+  checkEmoji(t: string, e: GuildEmoji, cs?: boolean, w?: boolean): boolean;
+
+  resolveChannel(t: string, c: S<GuildBasedChannel>, cs?: boolean, w?: boolean): Channel | undefined;
+
+  resolveChannels(t: string, c: S<GuildBasedChannel>, cs?: boolean, w?: boolean): S<Channel>;
+
+  checkChannel(t: string, c: GuildBasedChannel, cs?: boolean, w?: boolean): boolean;
+
+  resolveGuild(t: string, g: S<Guild>, cs?: boolean, w?: boolean): Guild | undefined;
+
+  resolveGuilds(t: string, g: S<Guild>, cs?: boolean, w?: boolean): S<Guild>;
+
+  checkGuild(t: string, g: Guild, cs?: boolean, w?: boolean): boolean;
+}
+
+type S<T> = Store<string, T>;
+export {};
 
 export class BladeClient extends Client {
   /**
@@ -1380,6 +1442,10 @@ export class BladeClient extends Client {
    * The options given to this client.
    */
   options: BladeOptions;
+  /**
+   * The client utility for resolving different discord structures.
+   */
+  util: ClientUtil;
 
   /**
    * @param options
@@ -1460,4 +1526,3 @@ export interface InhibitorOptions extends ModuleOptions {
   reason?: string;
   priority?: number;
 }
-

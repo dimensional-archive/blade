@@ -43,6 +43,6 @@ export class Flags {
    */
   public has(flag: string): boolean {
     const _flag = this._data[flag];
-    return typeof _flag !== undefined && _flag !== null;
+    return _flag !== undefined && _flag !== null;
   }
 }

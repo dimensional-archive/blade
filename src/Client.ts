@@ -1,6 +1,6 @@
 import { Client, ClientOptions } from "@kyudiscord/neo";
 import { dirname } from "path";
-import { logger } from "./util";
+import { logger, ClientUtil } from "./util";
 
 import type { Logger } from "@melike2d/logger";
 
@@ -16,12 +16,18 @@ export class BladeClient extends Client {
   public options: BladeOptions;
 
   /**
+   * The client utility for resolving different discord structures.
+   */
+  public util: ClientUtil
+
+  /**
    * @param options
    */
   public constructor(options: BladeOptions) {
     super(options.token, options);
 
     this.options = options;
+    this.util = new ClientUtil();
   }
 
   /**

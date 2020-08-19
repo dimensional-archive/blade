@@ -21,13 +21,14 @@ export * from "./components/monitor/MonitorHandler";
 export * from "./components/Decorators";
 export * from "./components/Provider";
 
-export * from "./util/Extender";
-export * from "./util/Duration";
-export * from "./util/Files";
-export * from "./util/Functions";
-export * from "./util/ProjectInfo";
 export * from "./util/Category";
 export * from "./util/Decorators";
+export * from "./util/ProjectInfo";
+export * from "./util/Functions";
+export * from "./util/Files";
+export * from "./util/Duration";
+export * from "./util/Extender";
+export * from "./util/ClientUtil";
 
 export * from "./Client";
 

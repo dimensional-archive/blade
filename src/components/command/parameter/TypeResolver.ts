@@ -1,4 +1,5 @@
 import { URL } from "url";
+import { ChannelType } from "@kyudiscord/dapi";
 import { Store } from "@kyudiscord/neo";
 
 import type { BladeClient } from "../../../Client";
@@ -7,7 +8,6 @@ import type { Context } from "../context/Context";
 export enum ParamType {
   STRING = "string",
   NUMBER = "number",
-  FLAG = "flag",
   MEMBER = "member",
   USER = "user",
   GUILD = "guild",
@@ -24,32 +24,37 @@ export enum ParamType {
 }
 
 export class TypeResolver {
-  public static BUILT_IN: Record<string, Resolver> = {
-    [ParamType.STRING]: (phrase) => {
-      return phrase
-        ? phrase.toString()
-        : null;
+  public static BUILT_IN: Record<ParamType, Resolver> = {
+    [ParamType.EMOJI](phrase, ctx) {
+      if (!phrase || !ctx.guild) return null;
+      return ctx.client.util.resolveEmoji(phrase, ctx.guild.emojis);
     },
 
-    [ParamType.NUMBER]: (phrase) => {
-      return !phrase || Number.isNaN(phrase)
-        ? parseFloat(phrase)
-        : null;
+    [ParamType.GUILD](phrase, ctx) {
+      if (!phrase) return null;
+      return ctx.client.util.resolveGuild(phrase, ctx.client.guilds);
     },
 
-    [ParamType.INTEGER]: (phrase) => {
-      return !phrase || Number.isNaN(phrase)
-        ? parseInt(phrase)
-        : null;
+    [ParamType.EMOJI_INT](phrase) {
+      if (!phrase) return null;
+
+      // @ts-ignore
+      const n = phrase.replace(/0⃣|1⃣|2⃣|3⃣|4⃣|5⃣|6⃣|7⃣|8⃣|9⃣|🔟/g, (m) => {
+        return [ "0⃣", "1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟", ].indexOf(m);
+      });
+
+      return Number.isNaN(n) ? null : parseInt(n);
     },
 
-    [ParamType.BIGINT]: (phrase) => {
-      return !phrase || Number.isNaN(phrase)
-        ? BigInt(phrase)
-        : null;
-    },
+    [ParamType.STRING]: p => p ? p.toString() : null,
 
-    [ParamType.URL]: (phrase) => {
+    [ParamType.NUMBER]: p => !p && !Number.isNaN(p) ? parseFloat(p) : null,
+
+    [ParamType.INTEGER]: p => !p && !Number.isNaN(p) ? parseInt(p) : null,
+
+    [ParamType.BIGINT]: (p) => !p && !Number.isNaN(p) ? BigInt(p) : null,
+
+    [ParamType.URL](phrase) {
       if (!phrase) return null;
       if (/^<.+>$/.test(phrase)) phrase = phrase.slice(1, -1);
 
@@ -60,24 +65,53 @@ export class TypeResolver {
       }
     },
 
-    [ParamType.DATE]: (phrase) => {
+    [ParamType.DATE](phrase) {
       if (!phrase) return null;
 
-      const timestamp = Date.parse(phrase);
-      return isNaN(timestamp)
+      return isNaN(Date.parse(phrase))
         ? null
         : new Date(phrase);
     },
 
-    [ParamType.COLOR]: (phrase) => {
+    [ParamType.COLOR](phrase) {
       if (!phrase) return null;
 
       const color = parseInt(phrase.replace("#", ""), 16);
       return color < 0 || color > 0xFFFFFF || isNaN(color)
         ? null
         : color;
+    },
+
+    [ParamType.MEMBER]: (phrase, ctx) => {
+      if (!phrase || !ctx.guild) return null;
+      return ctx.client.util.resolveMember(phrase, ctx.guild.members);
+    },
+
+    [ParamType.USER]: (phrase, ctx) => {
+      if (!phrase) return null;
+      return ctx.client.util.resolveUser(phrase, ctx.client.users);
+    },
+
+    [ParamType.VOICE_CHANNEL]: (phrase, ctx) => {
+      if (!phrase || !ctx.guild) return null;
+
+      const channel = ctx.client.util.resolveChannel(phrase, ctx.guild.channels);
+      return !channel || channel.type !== ChannelType.GUILD_VOICE
+        ? null
+        : channel;
+    },
+
+    [ParamType.TEXT_CHANNEL]: (phrase, ctx) => {
+      if (!phrase || !ctx.guild) return null;
+      return ctx.client.util.resolveChannel(phrase, ctx.guild.channels);
+    },
+
+    [ParamType.ROLE]: (phrase, ctx) => {
+      if (!phrase || !ctx.guild) return null;
+      return ctx.client.util.resolveRole(phrase, ctx.guild.roles);
     }
   }
+
 
   /**
    * The client instance.
