@@ -304,7 +304,7 @@ export class CommandDispatcher {
    * @private
    */
   private async _checkRatelimits(ctx: Context, command: Command): Promise<boolean> {
-    const ignore = command.ignorePermissions ?? this.options.ignorePermissions!;
+    const ignore = this.options.ignoreRatelimit;
     const isIgnored = Array.isArray(ignore)
       ? ignore.includes(ctx.author.id)
       : typeof ignore === "function"
