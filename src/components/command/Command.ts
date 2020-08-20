@@ -1,5 +1,5 @@
 import { PermissionResolvable, Store } from "@kyudiscord/neo";
-import { Duration } from "../../util";
+import { Category, Duration } from "../../util";
 import { Module, ModuleOptions } from "../base/Module";
 
 import type { BladeClient } from "../../Client";
@@ -8,6 +8,7 @@ import type { CommandDispatcher, IgnorePermissions } from "./CommandDispatcher";
 import type { TypeBuilder } from "./parameter/TypeBuilder";
 import type { ParamType } from "./parameter/TypeResolver";
 import type { CommandHandler } from "./CommandHandler";
+import type { TFunction } from "../language/Language";
 
 export const RATELIMIT_REGEXP = /^(?:(channel|user|guild):)?(\d+)\/(\d+[smhwd])$/i;
 export const ratelimitDefaults: CommandRatelimit = { bucket: 1, cooldown: 5000, type: "user" };
@@ -56,17 +57,17 @@ export class Command extends Module<CommandOptions> {
   /**
    * The description of this command.
    */
-  public description: string;
+  public description: string | Translatable;
 
   /**
    * Example usages of this command.
    */
-  public examples: string[];
+  public examples: string[] | Translatable<string[]>;
 
   /**
    * Extended description content.
    */
-  public extendedDescription?: string;
+  public extendedDescription?: string | Translatable;
 
   /**
    * Whether or not this command can only be ran by developers/
@@ -93,23 +94,41 @@ export class Command extends Module<CommandOptions> {
     this.ratelimits = new Store();
 
     this.runIn = options.runIn;
+
     this.triggers = options.triggers ?? [];
+
     this.usage = options.usage ?? "";
-    this.description = options.description ?? "This command has no description.";
-    this.examples = options.examples ?? [];
-    this.extendedDescription = options.extendedDescription;
+
     this.developerOnly = options.developerOnly ?? false;
+
+    this.params = options.params ?? {};
+
+    this.quoted = options.quoted ?? true;
+
+    this.description = (typeof options.description === "function"
+      ? options.description.bind(this)
+      : options.description) ?? "This command has no description.";
+
+    this.examples = (typeof options.examples === "function"
+      ? options.examples.bind(this)
+      : options.examples) ?? [];
+
+    this.extendedDescription = typeof options.extendedDescription === "function"
+      ? options.extendedDescription.bind(this)
+      : options.extendedDescription;
+
     this.clientPerms = typeof options.clientPerms === "function"
       ? options.clientPerms.bind(this)
       : options.clientPerms ?? [];
+
     this.memberPerms = typeof options.memberPerms === "function"
       ? options.memberPerms.bind(this)
       : options.memberPerms ?? [];
+
     this.ignorePermissions = typeof options.ignorePermissions === "function"
       ? options.ignorePermissions.bind(this)
       : options.ignorePermissions ?? [];
-    this.params = options.params ?? {};
-    this.quoted = options.quoted ?? true;
+
     this.run = this.run.bind(this);
   }
 
@@ -137,6 +156,13 @@ export class Command extends Module<CommandOptions> {
   }
 
   /**
+   * The category this command is in.
+   */
+  public get category(): Category<Command> {
+    return this.handler.categories.get(this.categoryId)!;
+  }
+
+  /**
    * Called whenever a message matches any of the provided triggers.
    * @param ctx The command context.
    * @param args
@@ -147,6 +173,21 @@ export class Command extends Module<CommandOptions> {
     void (args);
     return;
   }
+}
+
+/**
+ * A helper decorator for applying options to a command.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function command(options: CommandOptions = {}) {
+  return <T extends new (...args: any[]) => Command>(target: T): T => {
+    return class extends target {
+      constructor(...args: any[]) {
+        super(...args, options);
+      }
+    };
+  };
 }
 
 /**
@@ -172,7 +213,12 @@ export type DefaultProvider = ((ctx: Context) => unknown | Promise<unknown>);
 /**
  * Used for creating advanced parameter types.
  */
-export type TypeBuilderProvider = ((b: TypeBuilder) => TypeBuilder | Promise<TypeBuilder>)
+export type TypeBuilderProvider = ((b: TypeBuilder) => TypeBuilder | Promise<TypeBuilder>);
+
+/**
+ * Used for translating shit.
+ */
+export type Translatable<T = string> = (t: TFunction<T>) => Promise<string>
 
 export interface CommandOptions extends ModuleOptions {
   /**
@@ -186,15 +232,15 @@ export interface CommandOptions extends ModuleOptions {
   /**
    * The command description.
    */
-  description?: string;
+  description?: string | Translatable;
   /**
    * Example usages of this command.
    */
-  examples?: string[];
+  examples?: string[] | Translatable<string[]>;
   /**
    * Extended help for this command.
    */
-  extendedDescription?: string;
+  extendedDescription?: string | Translatable;
   /**
    * The typeof channel that is required for this command to be ran.
    */
@@ -260,4 +306,8 @@ export interface PromptOptions {
   retry?: string;
   tries?: number;
   time?: number | string;
+}
+
+@command()
+export class Ping extends Command {
 }

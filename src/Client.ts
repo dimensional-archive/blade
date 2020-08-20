@@ -1,8 +1,10 @@
-import { Client, ClientOptions } from "@kyudiscord/neo";
+import { Client, ClientOptions, Store } from "@kyudiscord/neo";
 import { dirname } from "path";
 import { logger, ClientUtil } from "./util";
 
 import type { Logger } from "@melike2d/logger";
+import type { Handler } from "./components/base/Handler";
+import type { Module } from "./components/base/Module";
 
 export class BladeClient extends Client {
   /**
@@ -18,7 +20,12 @@ export class BladeClient extends Client {
   /**
    * The client utility for resolving different discord structures.
    */
-  public util: ClientUtil
+  public util: ClientUtil;
+
+  /**
+   * Handlers that were registered to this client.
+   */
+  public handlers: Store<string, Handler<Module>>;
 
   /**
    * @param options
@@ -26,6 +33,7 @@ export class BladeClient extends Client {
   public constructor(options: BladeOptions) {
     super(options.token, options);
 
+    this.handlers = new Store();
     this.options = options;
     this.util = new ClientUtil();
   }

@@ -8,6 +8,7 @@ import type { BladeClient } from "../../Client";
 import type { Command } from "./Command";
 import type { Context } from "./context/Context";
 import type { InhibitorHandler } from "../inhibitor/InhibitorHandler";
+import type { LanguageHandler } from "../language/LanguageHandler";
 
 export class CommandDispatcher {
   /**
@@ -48,7 +49,11 @@ export class CommandDispatcher {
       passive: false,
       ignorePermissions: [],
       ignoreRatelimit: [],
-      developers: []
+      developers: [],
+      getLanguage: () => {
+        const languages = this.client.handlers.get("languages") as LanguageHandler;
+        return languages.fallbackLanguage;
+      }
     } as DispatcherOptions, options);
 
     this.resolver = new TypeResolver(handler.client);
@@ -101,6 +106,8 @@ export class CommandDispatcher {
       this.contexts.set(message.id, ctx);
     }
 
+    ctx.params.data = {};
+    ctx.flags.data = {};
     message.ctx = ctx;
 
     // Run all of the "all" type inhibitors.
@@ -384,6 +391,7 @@ export type PrefixProvider = (this: BladeClient, ctx: Context) => string | strin
 export interface DispatcherOptions {
   developers?: string[];
   prefix?: string | string[] | PrefixProvider;
+  getLanguage?: (ctx: Context) => string | Promise<string>;
   contextSweepInterval?: number;
   contextLifetime?: number;
   mentionPrefix?: boolean;

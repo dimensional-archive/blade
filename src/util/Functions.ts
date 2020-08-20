@@ -102,15 +102,31 @@ export function code(strings: TemplateStringsArray, ...values: unknown[]): strin
  * Creates a typed code block template tag.
  * @param type The type of code block.
  */
-export function code(type: string): TemplateTag;
-export function code(...args: unknown[]): string | TemplateTag {
-  const block = (type?: string): TemplateTag =>
+export function code(type: string): TemplateTag<string>;
+export function code(...args: unknown[]): string | TemplateTag<string> {
+  const block = (type?: string): TemplateTag<string> =>
     (strings: TemplateStringsArray, ...values: unknown[]) =>
       `\`\`\`${type ?? ""}\n${strings.map((s, i) => s + (values[i] ?? "")).join("")}\n\`\`\``;
 
   return typeof args[0] === "string"
     ? block(args.shift() as string)
     : block()(args[0] as TemplateStringsArray, ...args.slice(1));
+}
+
+/**
+ * A helper function for testing whether or not a value exists.
+ * @param value
+ */
+export function doesExist(value: unknown): boolean {
+  return value !== undefined && value !== void 0;
+}
+
+/**
+ * Test whether or not a value is an object.
+ * @param value
+ */
+export function isObj(value: unknown): value is Dictionary {
+  return typeof value === "object" && doesExist(value);
 }
 
 /**
@@ -128,4 +144,4 @@ export function mergeObjects<O extends Dictionary = Dictionary>(...objects: Part
   return o as O;
 }
 
-export type TemplateTag = (strings: TemplateStringsArray, ...values: unknown[]) => string;
+export type TemplateTag<T> = (strings: TemplateStringsArray, ...values: unknown[]) => T;

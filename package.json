@@ -1,6 +1,6 @@
 {
   "name": "@kyudiscord/blade",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A powerful bot framework for the Neo Discord Library.",
   "main": "dist/index.js",
   "repository": "https://github.com/kyudiscord/neo",
@@ -9,7 +9,7 @@
   "private": false,
   "scripts": {
     "build": "rm -rf dist && tsc --removeComments",
-    "build:types": "rm -rf dist && tsc -d && yarn dts-bundle && yarn build",
+    "build:types": "rm -rf dist && tsc -d && yarn dts-bundle",
     "dts-bundle": "dts-bundle --removeSource --name @kyudiscord/blade --main ./dist --out ../index.d.ts --baseDir ./dist --outputAsModuleFolder"
   },
   "devDependencies": {

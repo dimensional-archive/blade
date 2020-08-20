@@ -29,6 +29,20 @@ export class Monitor extends Module<MonitorOptions> {
     this.ignore = options.ignore ?? mergeObjects<MonitorIgnore>(...ignoreTypes.map(s => ({ [s]: true })));
   }
 
+  /**
+   * Whether or not this monitor can run a message.
+   * @param message The message.
+   */
+  public canRun(message: Message): boolean {
+    return this.enabled &&
+      this.allowedTypes.includes(message.type) &&
+      !(this.ignore.bots && message.author.bot) &&
+      !(this.ignore.self && this.client.user === message.author) &&
+      !(this.ignore.others && this.client.user !== message.author) &&
+      !(this.ignore.webhooks && message.webhookId) &&
+      !(this.ignore.edits && message.editedTimestamp);
+  }
+
 
   /**
    * Called whenever a message is received.
@@ -57,6 +71,21 @@ export class Monitor extends Module<MonitorOptions> {
       void this.logger.error(config({ prefix: message.id }), e);
     }
   }
+}
+
+/**
+ * A helper decorator for applying options to a monitor.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function monitor(options: ModuleOptions = {}) {
+  return <T extends new (...args: any[]) => Monitor>(target: T): T => {
+    return class extends target {
+      constructor(...args: any[]) {
+        super(...args, options);
+      }
+    };
+  };
 }
 
 export interface MonitorOptions extends ModuleOptions {

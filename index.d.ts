@@ -5,7 +5,6 @@ import type {
   Constructor,
   Embed,
   Extender,
-  Fn,
   Guild,
   GuildBasedChannel,
   GuildEmoji,
@@ -23,8 +22,6 @@ import type { Logger } from "@melike2d/logger";
 import type { EventEmitter } from "events";
 import type { Stats } from "fs";
 import type { MessageType } from "@kyudiscord/dapi";
-
-import "./util/Extender";
 
 declare global {
   type Tuple<A, B> = [ A, B ];
@@ -101,6 +98,11 @@ export class Context {
   constructor(dispatcher: CommandDispatcher, message: Message);
 
   /**
+   * The language for this context.
+   */
+  language(): Promise<Language | undefined>;
+
+  /**
    * Replies to the message.
    * @param content
    */
@@ -119,6 +121,23 @@ export class Context {
    * @since 1.0.3
    */
   resolve<T = unknown>(value: string, type: ParamType): Promise<T | null>;
+
+  /**
+   * Get a translation.
+   * @param path The translation path.
+   * @param context The context to use.
+   */
+  translate<T = string>(path: string, context?: Dictionary): Promise<T>;
+
+  /**
+   * Translate the template literal.
+   */
+  t<T = string>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T>;
+  /**
+   * Get a translation
+   * @param context The context to use.
+   */
+  t<T = string>(context: Dictionary): TemplateTag<Promise<T>>;
 }
 
 export class Module<O extends ModuleOptions = ModuleOptions> extends Structure {
@@ -762,15 +781,15 @@ export class Command extends Module<CommandOptions> {
   /**
    * The description of this command.
    */
-  description: string;
+  description: string | Translatable;
   /**
    * Example usages of this command.
    */
-  examples: string[];
+  examples: string[] | Translatable<string[]>;
   /**
    * Extended description content.
    */
-  extendedDescription?: string;
+  extendedDescription?: string | Translatable;
   /**
    * Whether or not this command can only be ran by developers/
    */
@@ -801,6 +820,11 @@ export class Command extends Module<CommandOptions> {
   get ratelimit(): CommandRatelimit;
 
   /**
+   * The category this command is in.
+   */
+  get category(): Category<Command>;
+
+  /**
    * Called whenever a message matches any of the provided triggers.
    * @param ctx The command context.
    * @param args
@@ -808,6 +832,13 @@ export class Command extends Module<CommandOptions> {
    */
   run(ctx: Context, args: Array<string | unknown>): unknown;
 }
+
+/**
+ * A helper decorator for applying options to a command.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function command(options?: CommandOptions): <T extends new (...args: any[]) => Command>(target: T) => T;
 
 /**
  * The type of channel to run the command in.
@@ -829,6 +860,10 @@ export type DefaultProvider = ((ctx: Context) => unknown | Promise<unknown>);
  * Used for creating advanced parameter types.
  */
 export type TypeBuilderProvider = ((b: TypeBuilder) => TypeBuilder | Promise<TypeBuilder>);
+/**
+ * Used for translating shit.
+ */
+export type Translatable<T = string> = (t: TFunction<T>) => Promise<string>;
 
 export interface CommandOptions extends ModuleOptions {
   /**
@@ -842,15 +877,15 @@ export interface CommandOptions extends ModuleOptions {
   /**
    * The command description.
    */
-  description?: string;
+  description?: string | Translatable;
   /**
    * Example usages of this command.
    */
-  examples?: string[];
+  examples?: string[] | Translatable<string[]>;
   /**
    * Extended help for this command.
    */
-  extendedDescription?: string;
+  extendedDescription?: string | Translatable;
   /**
    * The typeof channel that is required for this command to be ran.
    */
@@ -918,6 +953,9 @@ export interface PromptOptions {
   time?: number | string;
 }
 
+export class Ping extends Command {
+}
+
 export class CommandDispatcher {
   readonly options: DispatcherOptions;
   /**
@@ -978,6 +1016,7 @@ export type PrefixProvider = (this: BladeClient, ctx: Context) => string | strin
 export interface DispatcherOptions {
   developers?: string[];
   prefix?: string | string[] | PrefixProvider;
+  getLanguage?: (ctx: Context) => string | Promise<string>;
   contextSweepInterval?: number;
   contextLifetime?: number;
   mentionPrefix?: boolean;
@@ -992,12 +1031,30 @@ export class CommandHandler extends Handler<Command> {
    * The command dispatcher.
    */
   readonly dispatcher: CommandDispatcher;
+  /**
+   * The command categories.
+   */
+  readonly categories: Store<string, Category<Command>>;
 
   /**
    * @param client
    * @param options
    */
   constructor(client: BladeClient, options?: CommandHandlerOptions);
+
+  /**
+   * Adds a new command to the command store.
+   * @param module The command to add.
+   * @param reload Whether or not the command was reloaded.
+   */
+  add(module: Command, reload?: boolean): Command | null;
+
+  /**
+   * Removes a command from the commands store.
+   * @param resolvable The command to remove.
+   * @param emit Whether or not to emit the removed event.
+   */
+  remove(resolvable: ModuleResolvable<Command>, emit?: boolean): Command | null;
 }
 
 export interface CommandHandlerOptions extends HandlerOptions {
@@ -1050,6 +1107,15 @@ export class Listener extends Module<ListenerOptions> {
   _unListen(): Listener;
 }
 
+/**
+ * A helper decorator for applying options to a listener.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function listener(options: ListenerOptions): <T extends new (...args: any[]) => Listener>(target: T) => T;
+
+export type Fn<R = unknown> = (...args: unknown[]) => R;
+
 export interface ListenerOptions extends ModuleOptions {
   event: string | string[];
   emitter?: string | EventEmitterLike;
@@ -1086,7 +1152,112 @@ export class ListenerHandler extends Handler<Listener> {
 }
 
 export interface ListenerHandlerOptions extends HandlerOptions {
-  emitters?: Dictionary<EventEmitter>;
+  emitters?: Dictionary<EventEmitterLike>;
+}
+
+/**
+ * Declare a language namespace.
+ */
+export const namespace: PropertyDecorator;
+/**
+ * Symbol used for namespace storage.
+ */
+export const LANGUAGE_NAMESPACES: unique symbol;
+/**
+ * RegExp Used for Parsing a translation path
+ */
+export const TRANSLATION_PATH_REGEXP: RegExp;
+/**
+ * RegExp for matching string interpolation.
+ */
+export const INTERPOLATION_REGEXP: RegExp;
+
+export class Language extends Module<LanguageOptions> {
+  /**
+   * The language handler.
+   */
+  handler: LanguageHandler;
+  /**
+   * Language Aliases to use.
+   */
+  aliases: string[];
+  /**
+   * Language Metadata.
+   */
+  meta?: Dictionary;
+  /**
+   * Pass the entire context object instead of it's values.
+   */
+  passContextObject: boolean;
+
+  /**
+   * @param client
+   * @param options
+   */
+  constructor(client: BladeClient, options?: LanguageOptions);
+
+  /**
+   * The namespaces associated with this language.
+   */
+  get namespaces(): string[];
+
+  /**
+   * Get a translation.
+   * @param path The translation path.
+   * @param context The context to use when translating.
+   */
+  translate<T>(path: string, context?: Dictionary): Promise<T>;
+}
+
+/**
+ * A helper decorator for applying options to a inhibitor.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function language(options?: LanguageOptions): <T extends new (...args: any[]) => Language>(target: T) => T;
+
+export type TFunction<T = string> = (path: string, context?: Dictionary) => Promise<T>;
+
+export interface LanguageOptions extends ModuleOptions {
+  aliases?: string[];
+  meta?: Dictionary;
+  passContextObject?: boolean;
+}
+
+export class LanguageHandler extends Handler<Language> {
+  /**
+   * The language to fallback on in case an incorrect language was provided.
+   */
+  fallbackLanguage: string;
+  /**
+   * The primary namespace.
+   */
+  primaryNamespace: string;
+
+  /**
+   * @param client
+   * @param options
+   */
+  constructor(client: BladeClient, options: LanguageHandlerOptions);
+
+  /**
+   * Get a language.
+   * @param resolvable A language alias/id or an instance of a language.
+   */
+  get(resolvable: ModuleResolvable<Language>): Language | undefined;
+
+  /**
+   * Get a translation
+   * @param lang The language id or alias.
+   * @param path The path to the translation
+   * @param context The context to use.
+   */
+  translate<T>(lang: string, path: string, context?: Dictionary): Promise<T>;
+}
+
+export interface LanguageHandlerOptions extends HandlerOptions {
+  primaryNamespace: string;
+  fallbackLanguage?: string;
 }
 
 export class Monitor extends Module<MonitorOptions> {
@@ -1106,6 +1277,12 @@ export class Monitor extends Module<MonitorOptions> {
   constructor(client: BladeClient, options?: MonitorOptions);
 
   /**
+   * Whether or not this monitor can run a message.
+   * @param message The message.
+   */
+  canRun(message: Message): boolean;
+
+  /**
    * Called whenever a message is received.
    * @param message
    * @since 1.0.0
@@ -1117,6 +1294,13 @@ export class Monitor extends Module<MonitorOptions> {
    */
   _run(message: Message): Promise<void>;
 }
+
+/**
+ * A helper decorator for applying options to a monitor.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function monitor(options?: ModuleOptions): <T extends new (...args: any[]) => Monitor>(target: T) => T;
 
 export interface MonitorOptions extends ModuleOptions {
   /**
@@ -1144,29 +1328,6 @@ export class MonitorHandler extends Handler<Monitor> {
    */
   constructor(client: BladeClient, options: HandlerOptions);
 }
-
-/**
- * A helper decorator for applying options to a command.
- * @param options The options to apply.
- * @since 2.0.0
- */
-export function command(options: CommandOptions): <T extends new (...args: any[]) => Command>(target: T) => T;
-
-/**
- * A helper decorator for applying options to a listener.
- * @param options The options to apply.
- * @since 2.0.0
- */
-export function listener(options: ListenerOptions): <T extends new (...args: any[]) => Listener>(target: T) => T;
-
-/**
- * A helper decorator for applying options to a monitor.
- * @param options The options to apply.
- * @since 2.0.0
- */
-export function monitor(options?: ModuleOptions): <T extends new (...args: any[]) => Monitor>(target: T) => T;
-
-export type Decorator<M> = (target: Constructor<M>) => Constructor<M>;
 
 export abstract class Provider<V extends any> {
   items: Store<string, V>;
@@ -1315,7 +1476,7 @@ export function isPromise(value: unknown): value is Promise<unknown>;
 /**
  * @param value
  */
-export function intoCallable<T>(value: T | ((...args: unknown[]) => T)): (...args: unknown[]) => T;
+export function intoCallable<T>(value: T | (() => T)): () => T;
 
 /**
  * Code block template tag.
@@ -1327,7 +1488,19 @@ export function code(strings: TemplateStringsArray, ...values: unknown[]): strin
  * Creates a typed code block template tag.
  * @param type The type of code block.
  */
-export function code(type: string): TemplateTag;
+export function code(type: string): TemplateTag<string>;
+
+/**
+ * A helper function for testing whether or not a value exists.
+ * @param value
+ */
+export function doesExist(value: unknown): boolean;
+
+/**
+ * Test whether or not a value is an object.
+ * @param value
+ */
+export function isObj(value: unknown): value is Dictionary;
 
 /**
  * Merges objects into one.
@@ -1335,7 +1508,7 @@ export function code(type: string): TemplateTag;
  */
 export function mergeObjects<O extends Dictionary = Dictionary>(...objects: Partial<O>[]): O;
 
-export type TemplateTag = (strings: TemplateStringsArray, ...values: unknown[]) => string;
+export type TemplateTag<T> = (strings: TemplateStringsArray, ...values: unknown[]) => T;
 
 /**
  * A helper function to test if a path leads to a directory.
@@ -1348,6 +1521,38 @@ export function isDir(path: string): boolean;
  * @param path
  */
 export function readDir(path: string): string[];
+
+export abstract class Doti {
+  /**
+   * Whether or not an object has a property.
+   * @param object The object
+   * @param path The path to the property.
+   */
+  static has(object: Dictionary, path: string): boolean;
+
+  /**
+   * Get a value.
+   * @param obj The object.
+   * @param path The path to the value.
+   * @param defaultValue The default value.
+   */
+  static get<T>(obj: Dictionary, path: string, defaultValue?: T): T | undefined;
+
+  /**
+   * Set a value.
+   * @param object The object.
+   * @param path The path.
+   * @param value The value.
+   */
+  static set(object: Dictionary, path: string, value: unknown): Dictionary;
+
+  /**
+   * Delete a property.
+   * @param object The object.
+   * @param path The path.
+   */
+  static delete(object: Dictionary, path: string): void;
+}
 
 /**
  * @file modified https://github.com/Naval-Base/ms
@@ -1446,6 +1651,10 @@ export class BladeClient extends Client {
    * The client utility for resolving different discord structures.
    */
   util: ClientUtil;
+  /**
+   * Handlers that were registered to this client.
+   */
+  handlers: Store<string, Handler<Module>>;
 
   /**
    * @param options
@@ -1514,6 +1723,13 @@ export class Inhibitor extends Module<InhibitorOptions> {
 }
 
 /**
+ * A helper decorator for applying options to a inhibitor.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function inhibitor(options?: InhibitorOptions): <T extends new (...args: any[]) => Inhibitor>(target: T) => T;
+
+/**
  * The type of inhibitor
  * - "command": Runs on messages that invoke a command.
  * - "all": Runs on all messages.
@@ -1526,3 +1742,4 @@ export interface InhibitorOptions extends ModuleOptions {
   reason?: string;
   priority?: number;
 }
+

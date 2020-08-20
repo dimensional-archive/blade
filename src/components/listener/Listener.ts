@@ -68,6 +68,7 @@ export class Listener extends Module<ListenerOptions> {
    * @private
    */
   _listen(): this {
+    if (!this.enabled) return this;
     if (this.event.length > 1) {
       for (const event of this.event) {
         const map = this.map[event];
@@ -131,7 +132,22 @@ export class Listener extends Module<ListenerOptions> {
   }
 }
 
-type Fn<R = unknown> = (...args: unknown[]) => R
+/**
+ * A helper decorator for applying options to a listener.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function listener(options: ListenerOptions) {
+  return <T extends new (...args: any[]) => Listener>(target: T): T => {
+    return class extends target {
+      constructor(...args: any[]) {
+        super(...args, options);
+      }
+    };
+  };
+}
+
+export type Fn<R = unknown> = (...args: unknown[]) => R
 
 export interface ListenerOptions extends ModuleOptions {
   event: string | string[];

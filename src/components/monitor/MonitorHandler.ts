@@ -17,7 +17,7 @@ export class MonitorHandler extends Handler<Monitor> {
     client.on("messageCreate", async (message) => {
       let count = 0;
       for (const monitor of this.store.values()) {
-        if (!monitor.enabled) continue;
+        if (!monitor.enabled || !monitor.canRun(message)) continue;
         await monitor._run(message);
         count++;
       }

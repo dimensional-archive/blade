@@ -46,6 +46,8 @@ export class Handler<T extends Module> extends EventEmitter {
   public constructor(client: BladeClient, name: string, options: HandlerOptions) {
     super();
 
+    client.handlers.set(name, this);
+
     this.client = client;
     this.store = new Store();
     this.name = name;

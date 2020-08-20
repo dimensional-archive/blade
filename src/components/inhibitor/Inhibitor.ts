@@ -58,6 +58,21 @@ export class Inhibitor extends Module<InhibitorOptions> {
 }
 
 /**
+ * A helper decorator for applying options to a inhibitor.
+ * @param options The options to apply.
+ * @since 2.0.0
+ */
+export function inhibitor(options: InhibitorOptions = {}) {
+  return <T extends new (...args: any[]) => Inhibitor>(target: T): T => {
+    return class extends target {
+      constructor(...args: any[]) {
+        super(...args, options);
+      }
+    };
+  };
+}
+
+/**
  * The type of inhibitor
  * - "command": Runs on messages that invoke a command.
  * - "all": Runs on all messages.

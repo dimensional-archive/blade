@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import "./util/Extender";
 import type { Context } from "./components/command/context/Context";
 
@@ -16,9 +17,10 @@ export * from "./components/command/CommandDispatcher";
 export * from "./components/command/CommandHandler";
 export * from "./components/listener/Listener";
 export * from "./components/listener/ListenerHandler";
+export * from "./components/language/Language";
+export * from "./components/language/LanguageHandler";
 export * from "./components/monitor/Monitor";
 export * from "./components/monitor/MonitorHandler";
-export * from "./components/Decorators";
 export * from "./components/Provider";
 
 export * from "./util/Category";
@@ -26,6 +28,7 @@ export * from "./util/Decorators";
 export * from "./util/ProjectInfo";
 export * from "./util/Functions";
 export * from "./util/Files";
+export * from "./util/Doti";
 export * from "./util/Duration";
 export * from "./util/Extender";
 export * from "./util/ClientUtil";

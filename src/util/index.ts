@@ -1,4 +1,5 @@
 export * from "./Category";
+export * from "./Doti";
 export * from "./Decorators";
 export * from "./ProjectInfo";
 export * from "./Functions";

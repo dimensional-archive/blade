@@ -1,10 +1,13 @@
 import { Params } from "./Params";
 import { Flags } from "./Flags";
 
-import type { Message, Member, Guild, User, TextBasedChannel, Embed } from "@kyudiscord/neo";
+import type { Embed, Guild, Member, Message, TextBasedChannel, User } from "@kyudiscord/neo";
 import type { CommandDispatcher } from "../CommandDispatcher";
 import type { BladeClient } from "../../../Client";
 import type { ParamType } from "../parameter/TypeResolver";
+import type { LanguageHandler } from "../../language/LanguageHandler";
+import type { TemplateTag } from "../../../util";
+import type { Language } from "../../language/Language";
 
 export class Context {
   /**
@@ -98,6 +101,15 @@ export class Context {
   }
 
   /**
+   * The language for this context.
+   */
+  public async language(): Promise<Language | undefined> {
+    const languages = this.client.handlers.get("languages") as LanguageHandler;
+    if (!languages) return undefined;
+    return languages.get(await this.dispatcher.options.getLanguage!.call(languages, this));
+  }
+
+  /**
    * Replies to the message.
    * @param content
    */
@@ -137,6 +149,38 @@ export class Context {
     if (!resolver) throw new Error(`Type "${type}" does not exist.`);
     return (await resolver(value, this) as T) ?? null;
   }
+
+  /**
+   * Get a translation.
+   * @param path The translation path.
+   * @param context The context to use.
+   */
+  public async translate<T = string>(path: string, context: Dictionary = {}): Promise<T> {
+    const language = await this.language();
+    if (language) return language.translate(path, context);
+    throw new Error("No Language Handler Available");
+  }
+
+  /**
+   * Translate the template literal.
+   */
+  public t<T = string>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T>
+  /**
+   * Get a translation
+   * @param context The context to use.
+   */
+  public t<T = string>(context: Dictionary): TemplateTag<Promise<T>>
+  public t<T>(a1: Dictionary | TemplateStringsArray, ...a2: unknown[]): Promise<T> | TemplateTag<Promise<T>> {
+    const translate = (context: Dictionary = {}) => {
+      return (strings: any[], ...values: unknown[]) => {
+        const joined = strings.map((s, i) => s + (values[i] ?? "")).join("");
+        return this.translate(joined, context);
+      };
+    };
+
+    return (Array.isArray(a1) ? translate()(a1, a2) : translate(a1)) as any;
+  }
+
 
   /**
    * Sets the last response of this context.
