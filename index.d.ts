@@ -1199,7 +1199,7 @@ export class Language extends Module<LanguageOptions> {
   /**
    * The namespaces associated with this language.
    */
-  get namespaces(): string[];
+  get namespaces(): Set<string>;
 
   /**
    * Get a translation.

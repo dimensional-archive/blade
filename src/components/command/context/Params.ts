@@ -1,6 +1,6 @@
 export class Params {
   public constructor() {
-    Object.defineProperty(this, "_data", { value: {} });
+    Object.defineProperty(this, "_data", { value: {}, writable: true });
   }
 
   /**

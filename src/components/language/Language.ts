@@ -69,7 +69,7 @@ export class Language extends Module<LanguageOptions> {
   /**
    * The namespaces associated with this language.
    */
-  public get namespaces(): string[] {
+  public get namespaces(): Set<string> {
     return Reflect.getMetadata(LANGUAGE_NAMESPACES, this);
   }
 
@@ -86,7 +86,7 @@ export class Language extends Module<LanguageOptions> {
 
     // @ts-ignore
     const data = this[ns];
-    if (!this.namespaces.includes(ns) || !isObj(data)) throw `Missing or incorrect namespace: ${ns}`;
+    if (!this.namespaces.has(ns) || !isObj(data)) throw `Missing or incorrect namespace: ${ns}`;
     if (i) p = p.slice(0, p.length - iw.length);
 
     let v = Doti.get<unknown>(data, p);

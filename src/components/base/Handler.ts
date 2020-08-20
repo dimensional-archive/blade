@@ -187,7 +187,7 @@ export class Handler<T extends Module> extends EventEmitter {
    */
   public emit(event: string, ...args: unknown[]): boolean {
     return this.listenerCount(event)
-      ? this.emit(event, ...args)
+      ? super.emit(event, ...args)
       : false;
   }
 
